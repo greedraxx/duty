@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<title>업무일지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#111111; --muted:#777777; --line:#E4E4E4; --field-line:#BDBDBD; --soft:#F3F3F3;
+  --accent:#111111; --accent-ink:#FFFFFF; --bad:#C62828; --bad-soft:#FDECEA; --ok:#1B7F3B; --mark:#FFE98A;
+  --f-ui:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
+  --accent:#F2F2F2; --accent-ink:#111111; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; --mark:#6B5A00; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:820px;margin:0 auto}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;flex:none}
+.dot.on{background:var(--ok)}.dot.busy{background:#C99700}.dot.off{background:var(--bad)}
+
+.appnav{padding-top:10px}
+.navrow{display:flex;align-items:center;gap:2px}
+.appnav a{padding:6px 9px;border-radius:8px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
+.appnav a[href="index.html"]{color:#D4A000}
+.appnav a[href="schedule.html"]{color:#1B8A3A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="index.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
+.sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0;text-align:right;line-height:1.2}
+
+.head{padding-block:16px 6px}
+h1{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.btn{border:1px solid var(--ink);border-radius:8px;height:40px;padding:0 14px;font-weight:700;cursor:pointer;font-size:14px;background:none;white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.small{height:34px;padding:0 10px;font-size:13px;border-color:var(--field-line);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.search input{width:100%;height:44px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;background:var(--surface);font-size:16px}
+.search input:focus{outline:none;border-color:var(--ink)}
+.datebar{display:flex;align-items:center;gap:6px;margin-top:10px}
+.datebar .btn{width:42px;padding:0;flex:none}
+.datebar .today{width:auto;padding:0 12px}
+.datebar label{flex:1;min-width:0;position:relative}
+.datebar .dshow{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid var(--field-line);border-radius:8px;font-weight:800;font-size:16px;white-space:nowrap}
+.datebar input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+
+main{padding-block:10px 60px}
+.ed textarea{width:100%;min-height:55vh;border:1px solid var(--field-line);border-radius:8px;padding:12px;background:var(--surface);font-size:16px;line-height:1.6;resize:vertical}
+.ed textarea:focus{outline:none;border-color:var(--ink)}
+.edmeta{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:6px}
+.banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.rcount{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.res{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.hit{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 14px;cursor:pointer}
+.hit + .hit{border-top:1px solid var(--line)}
+.hit .d{font-weight:800;font-size:14.5px}
+.hit .d small{font-weight:500;color:var(--muted);margin-left:6px;font-size:12px}
+.hit .l{font-size:13.5px;color:var(--ink);margin-top:3px;word-break:break-word}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
+.empty{color:var(--muted);text-align:center;padding:30px 14px}
+.more{margin:10px auto;display:block}
+details.tools{margin-top:18px;border:1px solid var(--line);border-radius:10px;padding:0 14px}
+details.tools summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:14px}
+.tl{display:flex;flex-direction:column;gap:10px;padding:0 0 14px}
+.tl p{margin:0;font-size:13px;color:var(--muted)}
+.tl .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tl input[type=number]{width:90px;height:38px;border:1px solid var(--field-line);border-radius:6px;padding:0 8px;background:var(--surface);font-size:16px}
+.tl label.ck{font-size:13px;display:flex;gap:6px;align-items:center}
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.gatebox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.gatebox h2{margin:0;font-size:20px}
+.gatebox p{margin:0;font-size:13px;color:var(--muted)}
+.gatebox input{height:48px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;font-size:18px;background:var(--surface)}
+.gatebox input:focus{outline:none;border-color:var(--ink)}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<nav class="appnav gut"><div class="wrap navrow">
+  <a href="index.html">당직일지</a>
+  <a href="schedule.html">근무표</a>
+  <a href="journal.html" aria-current="page">업무일지</a>
+  <a href="docs.html">서류</a>
+  <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
+</div></nav>
+
+<header class="head gut"><div class="wrap">
+  <h1>업무일지</h1>
+  <label class="search"><input id="q" type="search" placeholder="전체 일지에서 찾기 (예: 하이119 FCU)" autocomplete="off" enterkeyhint="search" aria-label="업무일지 검색"></label>
+  <div class="datebar" id="datebar">
+    <button type="button" class="btn" id="prev" aria-label="전날">‹</button>
+    <label><span class="dshow" id="dshow"></span><input type="date" id="date" aria-label="날짜 선택"></label>
+    <button type="button" class="btn" id="next" aria-label="다음날">›</button>
+    <button type="button" class="btn today" id="today">오늘</button>
+  </div>
+</div></header>
+
+<main class="gut"><div class="wrap">
+  <div id="msgs"></div>
+  <section class="ed" id="editor">
+    <textarea id="body" maxlength="30000" placeholder="-내용을 입력하세요&#10; ㄴ세부 내용" aria-label="업무일지 내용" spellcheck="false"></textarea>
+    <div class="edmeta"><span id="saveState"></span><span id="chars"></span></div>
+  </section>
+  <section id="results" hidden>
+    <div class="rcount" id="rcount"></div>
+    <div class="res" id="hits"></div>
+    <button type="button" class="btn more" id="more" hidden>더 보기</button>
+  </section>
+
+  <details class="tools" id="tools">
+    <summary>가져오기 · 내보내기</summary>
+    <div class="tl">
+      <p>메모장 파일(.txt)을 가져옵니다. <b>&lt;1월 1일 목요일&gt;</b> 같은 줄을 날짜 제목으로 읽고, 그 아래를 그날 내용으로 저장합니다.</p>
+      <div class="row"><label class="ck">연도 <input type="number" id="impYear" min="2000" max="2100"></label><input type="file" id="impFile" accept=".txt,text/plain"></div>
+      <label class="ck"><input type="checkbox" id="impOver"> 이미 내용이 있는 날짜도 덮어쓰기</label>
+      <div id="impInfo" class="rcount"></div>
+      <div class="row"><button type="button" class="btn primary" id="impGo" disabled>가져오기</button></div>
+      <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:4px 0">
+      <p>전체 업무일지를 메모장 형식(.txt)으로 내려받습니다. 백업용으로 가끔 받아 두세요.</p>
+      <div class="row"><button type="button" class="btn" id="expBtn">전체 내보내기</button></div>
+    </div>
+  </details>
+</div></main>
+
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <h2>업무일지</h2>
+    <p>팀 코드를 입력하세요. 이 기기에 기억되어 다음부터는 묻지 않습니다.</p>
+    <input id="gateInput" type="password" autocomplete="off" aria-label="팀 코드" required>
+    <button type="submit" class="btn primary">확인</button>
+    <p class="err" id="gateMsg"></p>
+  </form>
+</div>
+
+<script>
+(() => {
+const CFG = window.DUTY_CONFIG || {};
+const $ = id => document.getElementById(id);
+const WD = ['일','월','화','수','목','금','토'];
+const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+const teamCode = () => store.get('dutylog.team') || '';
+const configured = () => !!(CFG.supabaseUrl && CFG.supabaseKey && !/YOUR_|여기에/.test(CFG.supabaseUrl + CFG.supabaseKey));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const parseD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ymd(d); };
+const longDate = s => { const d = parseD(s); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`; };
+function setSync(kind, text){ $('syncDot').className = 'dot ' + kind; $('syncText').textContent = text; }
+
+/* ---------- 상태 ---------- */
+let entries = {};                       // date -> {body, ts}
+let pending = {};                       // date -> body (아직 서버에 못 올린 것)
+let lastTs = '';                        // 서버에서 받은 가장 최근 updated_at
+let curDate = ymd(new Date()), loaded = false, online = true, typedAt = 0, saveTimer = null, flushing = false;
+try{ const c = JSON.parse(store.get('journal.cache') || 'null'); if(c){ entries = c.entries || {}; lastTs = c.lastTs || ''; } }catch(e){}
+try{ pending = JSON.parse(store.get('journal.pending') || '{}') || {}; }catch(e){ pending = {}; }
+const saveCache = () => store.set('journal.cache', JSON.stringify({entries, lastTs}));
+const savePending = () => store.set('journal.pending', JSON.stringify(pending));
+const bodyOf = d => (d in pending) ? pending[d] : (entries[d] ? entries[d].body : '');
+
+async function sb(path, opt){
+  opt = opt || {};
+  const headers = Object.assign({apikey: CFG.supabaseKey, Authorization: 'Bearer ' + CFG.supabaseKey, 'x-team-code': teamCode()}, opt.headers || {});
+  const r = await fetch(CFG.supabaseUrl.replace(/\/+$/,'') + '/rest/v1/' + path, Object.assign({}, opt, {headers, cache: 'no-store'}));
+  if(!r.ok){ const e = new Error(await r.text().catch(() => String(r.status))); e.status = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const upsert = rows => sb('journal?on_conflict=date', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(rows)});
+
+function showGate(msg){ $('gate').hidden = false; $('gateMsg').textContent = msg || ''; setTimeout(() => $('gateInput').focus(), 50); }
+$('gateForm').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('gateInput').value.trim();
+  if(!/^[\x21-\x7e]{4,64}$/.test(v)){ $('gateMsg').textContent = '영문·숫자·기호 4자 이상으로 입력하세요.'; return; }
+  store.set('dutylog.team', v); $('gateMsg').textContent = '확인 중…'; sync(true);
+});
+
+/* ---------- 동기화 ---------- */
+function status(){
+  const n = Object.keys(pending).length;
+  if(!configured()) return setSync('off', '설정 필요');
+  if(!online) return setSync('off', n ? '오프라인 · 기기에 보관 중' : '연결 안 됨');
+  if(n) return setSync('busy', '저장 중…');
+  setSync('on', '저장됨 ' + new Date().toTimeString().slice(0,5));
+}
+async function pull(first){
+  const rows = [];
+  const filter = lastTs ? '&updated_at=gt.' + encodeURIComponent(lastTs) : '';
+  for(let off = 0; ; off += 1000){
+    const page = await sb('journal?select=date,body,updated_at&order=updated_at.asc&limit=1000&offset=' + off + filter);
+    rows.push(...page); if(page.length < 1000) break;
+  }
+  let touchedCur = false;
+  for(const r of rows){
+    if(!lastTs || Date.parse(r.updated_at) > Date.parse(lastTs)) lastTs = r.updated_at;
+    if(r.date in pending) continue;                       // 내 미전송 변경이 우선
+    entries[r.date] = {body: r.body, ts: r.updated_at};
+    if(r.date === curDate) touchedCur = true;
+  }
+  if(rows.length) saveCache();
+  if(touchedCur){
+    const ta = $('body'), v = bodyOf(curDate);
+    if(ta.value !== v && Date.now() - typedAt > 2500){ ta.value = v; $('chars').textContent = v.length + '자'; $('saveState').textContent = ''; }
+  }
+  if(rows.length && !$('results').hidden) runSearch();
+}
+async function flush(){
+  if(flushing || !configured()) return;
+  const dates = Object.keys(pending); if(!dates.length) return;
+  flushing = true;
+  try{
+    const sent = dates.map(d => [d, pending[d]]);
+    await upsert(sent.map(([date, body]) => ({date, body})));
+    for(const [d, b] of sent){ if(pending[d] === b){ delete pending[d]; entries[d] = {body: b, ts: new Date().toISOString()}; } }
+    savePending(); saveCache(); online = true;
+  }catch(e){
+    online = false;
+    if(e.status === 401 || e.status === 403){ showGate('팀 코드가 맞지 않습니다.'); }
+  }finally{ flushing = false; status(); }
+}
+async function sync(withGate){
+  if(!configured()){ status(); return; }
+  try{
+    const ok = await sb('rpc/team_check', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if(ok === false){ showGate(withGate && teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off', '팀 코드 필요'); return; }
+    $('gate').hidden = true;
+    await flush();
+    await pull();
+    loaded = true; online = true;
+  }catch(e){ online = false; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
+  status(); renderMsgs();
+}
+function renderMsgs(){
+  const m = [];
+  if(!configured()) m.push('<div class="banner bad">config.js에 Supabase 주소와 키가 없습니다.</div>');
+  else if(!loaded && !Object.keys(entries).length) m.push('<div class="banner bad">서버에 연결되지 않았습니다. 연결되면 자동으로 불러옵니다.</div>');
+  $('msgs').innerHTML = m.join('');
+}
+
+/* ---------- 편집 ---------- */
+function openDate(d, opt){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; flush(); }
+  curDate = d; $('date').value = d; $('dshow').textContent = longDate(d);
+  const ta = $('body'); ta.value = bodyOf(d); $('chars').textContent = ta.value.length + '자';
+  $('saveState').textContent = entries[d] || (d in pending) ? '' : '이 날짜는 아직 기록이 없습니다';
+  showEditor(true);
+  if(opt && opt.q) scrollToTerm(opt.q);
+  else ta.scrollTop = 0;
+}
+$('body').addEventListener('input', e => {
+  typedAt = Date.now(); const v = e.target.value;
+  pending[curDate] = v; savePending(); $('chars').textContent = v.length + '자'; $('saveState').textContent = '입력 중…'; status();
+  clearTimeout(saveTimer); saveTimer = setTimeout(async () => { saveTimer = null; await flush(); $('saveState').textContent = Object.keys(pending).length ? '기기에 보관 중 (연결되면 자동 저장)' : '저장됨'; }, 800);
+});
+$('prev').onclick = () => openDate(addDays(curDate, -1));
+$('next').onclick = () => openDate(addDays(curDate, 1));
+$('today').onclick = () => openDate(ymd(new Date()));
+$('date').addEventListener('change', e => { if(e.target.value) openDate(e.target.value); });
+window.addEventListener('pagehide', () => { if(saveTimer){ clearTimeout(saveTimer); flush(); } });
+
+function scrollToTerm(q){
+  const ta = $('body'), terms = q.toLowerCase().split(/\s+/).filter(Boolean), lines = ta.value.split('\n');
+  let idx = lines.findIndex(l => terms.some(t => l.toLowerCase().includes(t))); if(idx < 0) return;
+  const mirror = document.createElement('div'), cs = getComputedStyle(ta);
+  mirror.style.cssText = `position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:${ta.clientWidth}px;font:${cs.font};line-height:${cs.lineHeight};padding:${cs.padding};box-sizing:border-box`;
+  mirror.textContent = lines.slice(0, idx).join('\n') + '\n'; document.body.appendChild(mirror);
+  const y = mirror.offsetHeight; mirror.remove();
+  ta.scrollTop = Math.max(0, y - 40);
+  ta.scrollIntoView({block:'start'});
+}
+
+/* ---------- 검색 ---------- */
+let hitsAll = [], shown = 0, curQ = '';
+function showEditor(on){ $('editor').hidden = !on; $('datebar').hidden = !on; $('results').hidden = on; }
+function runSearch(){
+  const q = $('q').value.trim(); curQ = q;
+  if(!q){ showEditor(true); return; }
+  const terms = [...new Set(q.toLowerCase().split(/\s+/).filter(Boolean))];
+  hitsAll = [];
+  const dates = new Set([...Object.keys(entries), ...Object.keys(pending)]);
+  for(const d of [...dates].sort().reverse()){
+    const body = bodyOf(d), low = body.toLowerCase();
+    if(!terms.every(t => low.includes(t))) continue;               // 모든 검색어가 그날 안에 있어야 함
+    const lines = body.split('\n').filter(l => terms.some(t => l.toLowerCase().includes(t)));
+    hitsAll.push({d, lines});
+  }
+  shown = 0; $('hits').innerHTML = ''; showEditor(false);
+  const total = hitsAll.reduce((a, h) => a + h.lines.length, 0);
+  $('rcount').textContent = hitsAll.length ? `${hitsAll.length}일 · ${total}줄 일치` : '';
+  if(!hitsAll.length) $('hits').innerHTML = `<div class="empty">“${esc(q)}” 검색 결과가 없습니다.${loaded ? '' : '<br>서버에 연결되지 않아 이 기기에 보관된 기록에서만 찾았습니다.'}</div>`;
+  more();
+}
+function hl(line, terms){
+  const re = new RegExp('(' + terms.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  return line.trim().split(re).map((p, i) => i % 2 ? `<mark>${esc(p)}</mark>` : esc(p)).join('');
+}
+function more(){
+  const terms = [...new Set(curQ.toLowerCase().split(/\s+/).filter(Boolean))];
+  const chunk = hitsAll.slice(shown, shown + 40); shown += chunk.length;
+  $('hits').insertAdjacentHTML('beforeend', chunk.map(h => `
+    <button type="button" class="hit" data-d="${h.d}">
+      <div class="d">${esc(longDate(h.d))}<small>${h.lines.length}줄</small></div>
+      ${h.lines.slice(0, 3).map(l => `<div class="l">${hl(l, terms)}</div>`).join('')}
+      ${h.lines.length > 3 ? `<div class="l" style="color:var(--muted)">… 외 ${h.lines.length - 3}줄</div>` : ''}
+    </button>`).join(''));
+  $('more').hidden = shown >= hitsAll.length;
+}
+let qTimer = null;
+$('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(runSearch, 150); });
+$('more').onclick = more;
+$('hits').addEventListener('click', e => {
+  const b = e.target.closest('.hit'); if(!b) return;
+  const q = curQ; $('q').value = ''; openDate(b.dataset.d, {q});
+});
+
+/* ---------- 가져오기 / 내보내기 ---------- */
+let parsed = [];
+function parseTxt(text, year){
+  const L = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n');
+  const H = /^\s*<\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일[^>]*>\s*$/;
+  const days = [], bad = []; let cur = null;
+  for(const line of L){
+    const m = line.match(H);
+    if(m){
+      const mo = +m[1], d = +m[2], dt = new Date(year, mo - 1, d);
+      if(dt.getMonth() !== mo - 1 || dt.getDate() !== d){ bad.push(line.trim()); cur = null; continue; }
+      cur = {date: ymd(dt), lines: []}; days.push(cur);
+    }else if(cur) cur.lines.push(line);
+  }
+  const merged = {};                                    // 같은 날짜 제목이 두 번 나오면 이어 붙임
+  for(const x of days){ const b = x.lines.join('\n').replace(/\s+$/, '').replace(/^\n+/, ''); merged[x.date] = merged[x.date] ? merged[x.date] + '\n' + b : b; }
+  return {rows: Object.entries(merged).map(([date, body]) => ({date, body})), bad};
+}
+let impText = '';
+function refreshImp(){
+  if(!impText){ $('impInfo').textContent = ''; $('impGo').disabled = true; return; }
+  const y = +$('impYear').value || new Date().getFullYear(); const {rows, bad} = parseTxt(impText, y);
+  parsed = rows; const over = $('impOver').checked;
+  const target = rows.filter(r => over || !(entries[r.date] && entries[r.date].body.trim()) );
+  const skip = rows.length - target.length;
+  $('impInfo').innerHTML = rows.length ? `${rows.length}일치 발견 (${rows[0].date} ~ ${rows[rows.length-1].date}). <b>${target.length}일 가져옴</b>${skip ? `, 이미 있는 ${skip}일은 건너뜀` : ''}.${bad.length ? ' 읽을 수 없는 제목 ' + bad.length + '건: ' + esc(bad.slice(0,3).join(', ')) : ''}` : '날짜 제목(<1월 1일 목요일>)을 찾지 못했습니다.';
+  $('impGo').disabled = !target.length; parsed = target;
+}
+$('impYear').value = new Date().getFullYear();
+$('impYear').addEventListener('input', refreshImp); $('impOver').addEventListener('change', refreshImp);
+$('impFile').addEventListener('change', async e => { const f = e.target.files[0]; impText = f ? await f.text() : ''; refreshImp(); });
+$('impGo').addEventListener('click', async () => {
+  if(!configured() || !online && !loaded){ $('impInfo').textContent = '서버에 연결된 상태에서 가져오세요.'; return; }
+  $('impGo').disabled = true; let done = 0;
+  try{
+    for(let i = 0; i < parsed.length; i += 40){
+      const part = parsed.slice(i, i + 40); await upsert(part); done += part.length;
+      $('impInfo').textContent = `가져오는 중… ${done}/${parsed.length}`;
+    }
+    $('impInfo').textContent = `${done}일치를 가져왔습니다.`; impText = ''; $('impFile').value = '';
+    await pull(); openDate(curDate);
+  }catch(err){ $('impInfo').textContent = `${done}일치까지 가져온 뒤 실패했습니다. 같은 파일로 다시 가져오면 이어서 됩니다. (${err.status === 401 || err.status === 403 ? '팀 코드 확인' : '연결 확인'})`; }
+});
+$('expBtn').addEventListener('click', () => {
+  const dates = [...new Set([...Object.keys(entries), ...Object.keys(pending)])].sort().filter(d => bodyOf(d).trim());
+  if(!dates.length) return;
+  const txt = dates.map(d => { const dt = parseD(d); return `<${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일>\r\n` + bodyOf(d).replace(/\n/g, '\r\n') + '\r\n'; }).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], {type:'text/plain;charset=utf-8'}));
+  a.download = '업무일지_' + ymd(new Date()) + '.txt'; document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* ---------- 시작 ---------- */
+window.addEventListener('online', () => sync());
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') sync(); });
+setInterval(() => { if(document.visibilityState === 'visible' && $('gate').hidden) sync(); }, 15000);
+openDate(curDate); renderMsgs(); status(); sync();
+})();
+</script>
+</body>
+</html>

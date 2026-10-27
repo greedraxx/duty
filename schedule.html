@@ -10,7 +10,7 @@
     <script src="config.js"></script>
     <style>
         .appnav{display:flex;align-items:center;gap:4px;max-width:1600px;margin:0 auto;padding:12px 20px 0}
-        .appnav a{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--text-secondary);text-decoration:none;border:1px solid transparent}
+        .appnav a{padding:6px 9px;white-space:nowrap;border-radius:8px;font-size:14px;font-weight:700;color:var(--text-secondary);text-decoration:none;border:1px solid transparent}
         .appnav a[aria-current="page"]{color:var(--text-primary);border-color:var(--border-color);background:var(--bg-primary)}
         .appnav a[href="index.html"]{color:#D4A000}
         .appnav a[href="schedule.html"]{color:#1B8A3A}
@@ -839,6 +839,7 @@
     <nav class="appnav">
         <a href="index.html">당직일지</a>
         <a href="schedule.html" aria-current="page">근무표</a>
+        <a href="journal.html">업무일지</a>
         <a href="docs.html">서류</a>
         <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
     </nav>
