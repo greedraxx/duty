@@ -33,11 +33,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .navrow{display:flex;align-items:center;gap:2px}
 .appnav a{padding:6px 9px;border-radius:8px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid transparent;white-space:nowrap}
 .appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
-.appnav a[href="index.html"]{color:#D4A000}
+.appnav a[href="duty.html"]{color:#D4A000}
 .appnav a[href="schedule.html"]{color:#1B8A3A}
 .appnav a[href="journal.html"]{color:var(--ink)}
 .appnav a[href="docs.html"]{color:var(--muted)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="index.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="duty.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0;text-align:right;line-height:1.2}
 
 .head{padding-block:16px 4px}
@@ -72,6 +72,12 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0}
 mark.cur{background:#FF9F1A;color:#111;outline:2px solid #FF9F1A}
 .fab{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:7;height:44px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer}
 .savestate{font-size:12px;color:var(--muted)}
+.notice{margin:18px 0 8px;border:2px solid var(--ink);border-radius:12px;padding:12px 14px;background:var(--soft)}
+.notice .nh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
+.notice .nh b{font-size:15px;font-weight:800}
+.notice .nh span{font-size:12px;color:var(--muted)}
+.notice textarea{display:block;width:100%;min-height:7em;border:1px solid var(--field-line);border-radius:8px;padding:8px 10px;background:var(--surface);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden}
+.notice textarea:focus{outline:none;border-color:var(--ink)}
 .banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin:8px 0}
 .banner.bad{background:var(--bad-soft);color:var(--bad)}
 .rcount{font-size:12.5px;color:var(--muted);margin:10px 0 8px}
@@ -102,7 +108,7 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
 <body>
 <nav class="appnav gut"><div class="wrap navrow">
   <a href="journal.html" aria-current="page">업무일지</a>
-  <a href="index.html">당직일지</a>
+  <a href="duty.html">당직일지</a>
   <a href="schedule.html">근무표</a>
   <a href="docs.html">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
@@ -112,7 +118,7 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
 
 <main class="gut"><div class="wrap">
   <div class="findbar">
-    <input id="q" type="search" placeholder="찾기 (여러 단어 가능)" autocomplete="off" enterkeyhint="search" aria-label="업무일지 찾기">
+    <input id="q" type="search" placeholder="찾기" autocomplete="off" enterkeyhint="search" aria-label="업무일지 찾기">
     <span class="cnt" id="cnt"></span>
     <button type="button" class="btn small" id="fprev" aria-label="이전(과거) 일치" title="과거 방향">▲</button>
     <button type="button" class="btn small" id="fnext" aria-label="다음(최근) 일치" title="최근 방향">▼</button>
@@ -130,6 +136,11 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
     <button type="button" class="btn more" id="more" hidden>더 보기</button>
   </section>
   <section id="notes" aria-label="업무일지"></section>
+  <section class="notice" id="notice" aria-label="전달사항">
+    <div class="nh"><b>전달사항</b><span>매일 전달하는 내용 · 일지에 포함되지 않음 · 찾기·내보내기 제외</span></div>
+    <textarea id="noticeTa" maxlength="20000" spellcheck="false" placeholder="전달할 사항을 입력하세요" aria-label="전달사항"></textarea>
+    <div class="savestate" id="noticeState"></div>
+  </section>
 
   <details class="tools" id="tools">
     <summary>가져오기 · 내보내기</summary>
@@ -145,7 +156,7 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
     </div>
   </details>
 </div></main>
-<button type="button" class="fab" id="fab" hidden>↓ 맨 아래</button>
+<button type="button" class="fab" id="fab" hidden>↓ 오늘</button>
 
 <div class="gate" id="gate" hidden>
   <form class="gatebox" id="gateForm">
@@ -246,10 +257,10 @@ async function sync(withGate){
     const ok = await sb('rpc/team_check', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
     if(ok === false){ showGate(withGate && teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off', '팀 코드 필요'); return; }
     $('gate').hidden = true;
-    await flush();
-    await pull();
+    await flush(); await noticeFlush();
+    await pull(); await noticePull();
     loaded = true; online = true;
-    if(firstLoad){ firstLoad = false; if(!userMoved) window.scrollTo(0, document.documentElement.scrollHeight); }
+    if(firstLoad){ firstLoad = false; if(!userMoved) toToday(); }
   }catch(e){ online = false; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
   status(); renderMsgs();
 }
@@ -258,6 +269,38 @@ function renderMsgs(){
   if(!configured()) m.push('<div class="banner bad">config.js에 Supabase 주소와 키가 없습니다.</div>');
   else if(!loaded && !Object.keys(entries).length) m.push('<div class="banner bad">서버에 연결되지 않았습니다. 연결되면 자동으로 불러옵니다.</div>');
   $('msgs').innerHTML = m.join('');
+}
+
+/* ---------- 전달사항 (날짜와 무관한 고정 메모. config 표의 'journal:notice' 한 줄) ---------- */
+const NKEY = 'journal:notice';
+let noticeTs = '', noticeTyped = 0, noticeTimer = null, noticeBusy = false;
+let noticePend = store.get('journal.noticePending');          // null 이면 미전송 없음
+const nta = $('noticeTa');
+nta.value = noticePend != null ? noticePend : (store.get('journal.notice') || '');
+const nAuto = () => { nta.style.height = 'auto'; nta.style.height = Math.max(nta.scrollHeight + 2, 120) + 'px'; };
+nAuto();
+nta.addEventListener('input', () => {
+  noticeTyped = Date.now(); noticePend = nta.value; store.set('journal.noticePending', noticePend); store.set('journal.notice', nta.value); nAuto();
+  $('noticeState').textContent = '입력 중…'; clearTimeout(noticeTimer); noticeTimer = setTimeout(noticeFlush, 800);
+});
+nta.addEventListener('blur', () => { if(noticePend != null) noticeFlush(); });
+async function noticeFlush(){
+  if(noticePend == null || noticeBusy || !configured()) return;
+  noticeBusy = true; const sent = noticePend;
+  try{
+    await sb('config?on_conflict=key', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{key: NKEY, data: {text: sent}}])});
+    if(noticePend === sent){ noticePend = null; store.del('journal.noticePending'); }
+    $('noticeState').textContent = '저장됨';
+  }catch(e){ $('noticeState').textContent = '기기에 보관 중 (연결되면 자동 저장)'; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
+  finally{ noticeBusy = false; }
+}
+async function noticePull(){
+  if(noticePend != null) return;                                  // 내 미전송 변경이 우선
+  const rows = await sb('config?key=eq.' + encodeURIComponent(NKEY) + '&select=data,updated_at');
+  if(!rows.length) return;
+  const text = (rows[0].data && rows[0].data.text) || '';
+  noticeTs = rows[0].updated_at; store.set('journal.notice', text);
+  if(nta.value !== text && Date.now() - noticeTyped > 2500){ nta.value = text; nAuto(); }
 }
 
 /* ---------- 메모장 보기: 날짜별 블록을 이어서 쌓고, 맨 아래가 오늘 ---------- */
@@ -353,7 +396,9 @@ function scrollToDay(d, flash){
   if(!sec) return; sec.scrollIntoView({block:'start'});
   if(flash){ sec.classList.remove('flash'); void sec.offsetWidth; sec.classList.add('flash'); }
 }
-$('today').onclick = () => { stopEdit(); window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'}); };
+function todayTop(){ const s = sectionOf(todayStr()); return s ? Math.max(0, s.getBoundingClientRect().top + window.scrollY - Math.round(innerHeight * 0.3)) : document.documentElement.scrollHeight; }
+function toToday(smooth){ window.scrollTo({top: todayTop(), behavior: smooth ? 'smooth' : 'auto'}); }
+$('today').onclick = () => { stopEdit(); toToday(true); };
 $('date').addEventListener('change', e => {
   const d = e.target.value; if(!d) return; e.target.value = '';
   const had = !!sectionOf(d) && !!bodyOf(d).trim();
@@ -362,8 +407,8 @@ $('date').addEventListener('change', e => {
   if(!had) setTimeout(() => startEdit(d, 0), 350);          // 기록 없는 날짜는 바로 입력할 수 있게
 });
 const fab = $('fab');
-window.addEventListener('scroll', () => { const far = document.documentElement.scrollHeight - window.scrollY - innerHeight > 900; fab.hidden = !far; }, {passive:true});
-fab.onclick = () => window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});
+window.addEventListener('scroll', () => { const s = sectionOf(todayStr()); if(!s){ fab.hidden = true; return; } const y = s.getBoundingClientRect().top; fab.hidden = !(y < -700 || y > innerHeight + 700); }, {passive:true});
+fab.onclick = () => toToday(true);
 
 /* ---------- 찾기 ---------- */
 function collectMarks(keepIdx){
@@ -471,7 +516,7 @@ $('impGo').addEventListener('click', async () => {
       $('impInfo').textContent = `가져오는 중… ${done}/${parsed.length}`;
     }
     $('impInfo').textContent = `${done}일치를 가져왔습니다.`; impText = ''; $('impFile').value = '';
-    await pull(); renderAll(); scrollToDay(todayStr());
+    await pull(); renderAll(); toToday();
   }catch(err){ $('impInfo').textContent = `${done}일치까지 가져온 뒤 실패했습니다. 같은 파일로 다시 가져오면 이어서 됩니다. (${err.status === 401 || err.status === 403 ? '팀 코드 확인' : '연결 확인'})`; }
 });
 $('expBtn').addEventListener('click', () => {
@@ -487,7 +532,7 @@ window.addEventListener('online', () => sync());
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') sync(); });
 setInterval(() => { if(document.visibilityState === 'visible' && $('gate').hidden) sync(); }, 15000);
 renderAll(); renderMsgs(); status();
-requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight)); window.addEventListener('load', () => { window.scrollTo(0, document.documentElement.scrollHeight); }, {once:true});
+requestAnimationFrame(() => toToday()); window.addEventListener('load', () => { if(!userMoved) toToday(); }, {once:true});
 sync();
 })();
 </script>
