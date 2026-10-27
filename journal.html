@@ -158,6 +158,16 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
     <div class="savestate" id="noticeState"></div>
   </section>
 
+  <details class="tools" id="xlTools">
+    <summary>엑셀 출력 (시설팀 업무일지 양식)</summary>
+    <div class="tl">
+      <p>선택한 날짜의 업무일지를 기존 엑셀 양식에 채워서 내려받습니다. 날짜와 업무내용 <b>(14행부터)</b> 외의 칸은 양식 그대로 비워 둡니다.</p>
+      <div class="row"><label class="ck">날짜 <input type="date" id="xlDate"></label></div>
+      <label class="ck"><input type="checkbox" id="xlVac" checked> "금일 병실 공실 현황" 줄 포함</label>
+      <div id="xlInfo" class="rcount"></div>
+      <div class="row"><button type="button" class="btn primary" id="xlGo">엑셀 만들기</button></div>
+    </div>
+  </details>
   <details class="tools" id="tools">
     <summary>가져오기 · 내보내기</summary>
     <div class="tl">
@@ -541,6 +551,36 @@ $('expBtn').addEventListener('click', () => {
   const txt = dates.map(d => { const dt = parseD(d); return `<${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일>\r\n` + bodyOf(d).replace(/\n/g, '\r\n') + '\r\n'; }).join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], {type:'text/plain;charset=utf-8'}));
   a.download = '업무일지_' + ymd(new Date()) + '.txt'; document.body.appendChild(a); a.click(); a.remove();
+});
+
+
+/* ---------- 엑셀 출력 (기존 변환 프로그램과 같은 양식·규칙) ---------- */
+const loadScript = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error(src + ' 불러오기 실패')); document.head.appendChild(s); });
+let xlLibs = null;
+const xlLoad = () => xlLibs || (xlLibs = Promise.all([window.JSZip ? 0 : loadScript('vendor/jszip.min.js'), window.Worklog ? 0 : loadScript('worklog.js')]).catch(e => { xlLibs = null; throw e; }));
+function xlInfo(){
+  const d = $('xlDate').value, n = d ? (bodyOf(d).split(/\r?\n/).filter(l => l.trim()).length) : 0;
+  $('xlInfo').textContent = !d ? '날짜를 선택하세요.' : n ? `${longDate(d)} · 업무 ${n}줄` : `${longDate(d)} · 이 날짜에는 기록이 없습니다.`;
+  $('xlGo').disabled = !d || !n;
+}
+function xlDefault(){
+  const t = todayStr(); if(bodyOf(t).trim()) return t;
+  const ds = [...new Set([...Object.keys(entries), ...Object.keys(pending)])].filter(d => bodyOf(d).trim()).sort();
+  return ds.length ? ds[ds.length - 1] : t;
+}
+$('xlTools').addEventListener('toggle', () => { if($('xlTools').open){ if(!$('xlDate').value) $('xlDate').value = xlDefault(); xlInfo(); } });
+$('xlDate').addEventListener('input', xlInfo);
+$('xlGo').addEventListener('click', async () => {
+  const d = $('xlDate').value; if(!d) return;
+  const btn = $('xlGo'); btn.disabled = true; btn.textContent = '만드는 중…';
+  try{
+    await xlLoad();
+    const r = await window.Worklog.build(window.JSZip, d, bodyOf(d), {vacancy: $('xlVac').checked});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(r.blob); a.download = r.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    $('xlInfo').textContent = `${r.name} 저장 · 업무 ${r.count}줄`;
+  }catch(e){ $('xlInfo').textContent = '엑셀을 만들지 못했습니다: ' + (e && e.message || e); }
+  btn.textContent = '엑셀 만들기'; xlInfo();
 });
 
 /* ---------- 시작 ---------- */
