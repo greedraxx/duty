@@ -11,13 +11,13 @@
 <script src="config.js"></script>
 <style>
 :root{
-  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#111111; --muted:#777777; --line:#E4E4E4; --field-line:#BDBDBD; --soft:#F3F3F3;
-  --accent:#111111; --accent-ink:#FFFFFF; --bad:#C62828; --bad-soft:#FDECEA; --ok:#1B7F3B; --mark:#FFE98A;
+  --bg:#F6F3EC; --surface:#FBF9F4; --ink:#2B2B2B; --muted:#6F6B63; --line:#DDD7CA; --field-line:#BDB6A6; --soft:#EAE5D9; --bar:#5C6B7A;
+  --accent:#2B2B2B; --accent-ink:#FBF9F4; --bad:#C62828; --bad-soft:#FDECEA; --ok:#1B7F3B; --mark:#FFE98A;
   --f-ui:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
-  --accent:#F2F2F2; --accent-ink:#111111; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; --mark:#6B5A00; color-scheme:dark}}
+  --bg:#17181B; --surface:#1D1F23; --ink:#D9D7D0; --muted:#8F8D86; --line:#2C2E33; --field-line:#4A4D54; --soft:#23262B; --bar:#8FA3B5;
+  --accent:#D9D7D0; --accent-ink:#17181B; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; --mark:#6B5A00; color-scheme:dark}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -60,7 +60,7 @@ h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 main{padding-block:0 90px}
 .day{padding:14px 0 16px;border-bottom:1px solid var(--line);scroll-margin-top:62px}
 .day{margin-top:6px}
-.day h3{margin:0 0 8px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;background:var(--soft);border-left:5px solid var(--ink);border-radius:0 8px 8px 0;padding:8px 12px}
+.day h3{margin:0 0 8px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;background:var(--soft);border-left:5px solid var(--bar);border-radius:0 8px 8px 0;padding:8px 12px}
 .day.sat h3{border-left-color:#1E6FD9}.day.sun h3{border-left-color:#D93025}
 .day.sat h3 .w{color:#1E6FD9}.day.sun h3 .w{color:#D93025}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .day.sat h3{border-left-color:#6EA8FF}:root:not([data-theme="light"]) .day.sun h3{border-left-color:#FF8A80}:root:not([data-theme="light"]) .day.sat h3 .w{color:#6EA8FF}:root:not([data-theme="light"]) .day.sun h3 .w{color:#FF8A80}}
@@ -68,7 +68,7 @@ main{padding-block:0 90px}
 .day.today h3::after{content:"오늘";font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px}
 .day.flash{animation:flash 1.4s ease-out}
 @keyframes flash{0%{background:var(--mark)}100%{background:transparent}}
-.txt{white-space:pre-wrap;word-break:break-word;font-size:15.5px;line-height:1.6;min-height:1.6em;cursor:text;-webkit-tap-highlight-color:transparent}
+.txt{white-space:pre-wrap;word-break:break-word;font-size:16px;line-height:1.7;min-height:1.7em;cursor:text;-webkit-tap-highlight-color:transparent}
 .txt.ph{color:var(--muted)}
 .day textarea{display:block;width:100%;border:1px solid var(--ink);border-radius:8px;padding:8px 10px;margin:-1px;background:var(--surface);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden;min-height:3.4em}
 .day textarea:focus{outline:none}
