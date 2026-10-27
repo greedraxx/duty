@@ -82,6 +82,8 @@ main{padding-block:18px 110px}
 .inp input{width:104px;height:40px;border:1px solid var(--field-line);border-radius:6px;background:var(--surface);text-align:right;padding:0 10px;
   font-family:var(--f-num);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
 .inp input:focus{border-color:var(--ink);outline:none}
+.inp input.req{border:2px solid #F2B600}
+.inp input.req:focus{border-color:var(--ink)}
 .inp input.out{border-color:var(--bad);color:var(--bad)}
 .inp .u{font-size:12.5px;color:var(--muted);width:20px}
 
@@ -651,20 +653,20 @@ function buildForm(){
   $('meters').innerHTML = METERS.map(m => `
     <div class="mrow">
       <div class="top2"><label class="lb" for="m-${m.k}">${m.label}${m.sub?`<small>${m.sub}</small>`:''}</label>
-        <span class="inp"><input id="m-${m.k}" inputmode="decimal" autocomplete="off" placeholder="입력"></span></div>
+        <span class="inp"><input id="m-${m.k}" class="req" inputmode="decimal" autocomplete="off" placeholder="입력"></span></div>
       <div class="res" id="res-${m.k}"></div>
       <div class="err" id="err-${m.k}" hidden></div>
     </div>`).join('');
   $('nums').innerHTML = NUMS.map(it => `
     <div class="row"><label class="lb" for="pt-${it.k}">${esc(it.short||it.l)}${it.hint?`<small>기준 ${esc(it.hint)}</small>`:''}</label>
-      <span class="inp"><input id="pt-${it.k}" inputmode="${it.u==='병'?'numeric':'decimal'}" autocomplete="off"><span class="u">${it.u||''}</span></span></div>`).join('');
+      <span class="inp"><input id="pt-${it.k}" ${it.def==null?'class="req" ':''}inputmode="${it.u==='병'?'numeric':'decimal'}" autocomplete="off"><span class="u">${it.u||''}</span></span></div>`).join('');
   $('status').innerHTML = STATUS.map(it => `
     <div class="row" id="st-${it.k}"><span class="lb">${esc(it.box)}<small>${esc(it.l)}</small></span>
       <span class="seg" role="group" aria-label="${esc(it.box)} ${esc(it.l)}">${it.o.map(o=>`<button type="button" data-pk="${it.k}" data-v="${o}" class="${o!==it.ok?'abn':''}" aria-pressed="false">${o}</button>`).join('')}</span></div>`).join('');
   $('run').innerHTML = RUN.map(r => `<label class="fld">${r.label}<input id="r-${r.k}" placeholder="${r.def}"></label>`).join('');
   $('monthly').innerHTML = MONTHLY.map(m => `
     <div class="row"><label class="lb" for="mo-${m.k}">${m.label}<small class="mm" id="mos-${m.k}"></small></label>
-      <span class="inp"><input id="mo-${m.k}" inputmode="decimal" autocomplete="off"><span class="u">${m.unit}</span></span></div>`).join('');
+      <span class="inp"><input id="mo-${m.k}" class="req" inputmode="decimal" autocomplete="off"><span class="u">${m.unit}</span></span></div>`).join('');
 
   ['weather','tHi','tLo','notes'].forEach(k => $(k).addEventListener('input', e => { cur[k]=e.target.value; if(k==='worker') store.set('dutylog.worker', e.target.value); scheduleSave(); }));
   METERS.forEach(m => $('m-'+m.k).addEventListener('input', e => { cur.meters[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
