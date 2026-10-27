@@ -103,6 +103,21 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
 .gatebox input{height:48px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;font-size:18px;background:var(--surface)}
 .gatebox input:focus{outline:none;border-color:var(--ink)}
 .err{color:var(--bad)}
+
+/* 하단 메뉴 */
+:root{--bnav-h:calc(52px + env(safe-area-inset-bottom,0px))}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.bnav .in{max-width:820px;margin:0 auto;display:flex}
+.bnav a{flex:1;display:flex;align-items:center;justify-content:center;height:52px;font-size:14px;font-weight:700;text-decoration:none;color:var(--muted);border-top:3px solid transparent;margin-top:-1px;white-space:nowrap}
+.bnav a[href="journal.html"]{color:var(--ink)}
+.bnav a[href="duty.html"]{color:#D4A000}
+.bnav a[href="schedule.html"]{color:#1B8A3A}
+.bnav a[aria-current="page"]{border-top-color:currentColor}
+.bnav.hide{display:none}
+@media print{.bnav{display:none!important}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .bnav a[href="duty.html"]{color:#FFD54A}:root:not([data-theme="light"]) .bnav a[href="schedule.html"]{color:#6FD38A}}
+main{padding-bottom:calc(var(--bnav-h) + 70px)}
+.fab{bottom:calc(16px + var(--bnav-h))}
 </style>
 </head>
 <body>
@@ -113,6 +128,7 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
   <a href="docs.html">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
 </div></nav>
+<nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html" aria-current="page">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html">근무표</a><a href="docs.html">문서</a></div></nav>
 
 <header class="head gut"><div class="wrap"><h1>업무일지</h1></div></header>
 
@@ -536,5 +552,6 @@ requestAnimationFrame(() => toToday()); window.addEventListener('load', () => { 
 sync();
 })();
 </script>
+<script>(()=>{const b=document.querySelector('.bnav');if(!b||!matchMedia('(pointer: coarse)').matches)return;const t=e=>e.target&&e.target.matches&&e.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]),textarea');document.addEventListener('focusin',e=>{if(t(e))b.classList.add('hide')});const show=()=>setTimeout(()=>{if(!t({target:document.activeElement}))b.classList.remove('hide')},60);document.addEventListener('focusout',show);document.addEventListener('blur',show,true)})();</script>
 </body>
 </html>
