@@ -1,6 +1,6 @@
 /* 업무일지 엑셀 출력 — 기존 변환 프로그램(메모장→엑셀)과 같은 양식·같은 규칙.
    양식(template.xlsx)의 1~13행(제목·날짜·인원현황)을 그대로 두고,
-   14행부터 업무내용 + 고정 블록(야간순찰·병실 보수·공실 현황) + 비고 4행을 채운다.
+   14행부터 업무내용 + 고정 블록(야간순찰·병실 보수) + 비고 4행을 채운다.
    결재칸 그림은 원본과 같은 방식으로 파일 안에 넣는다. */
 (function(root){
 'use strict';
@@ -18,8 +18,7 @@ var FIXED = [
   ['병실 보수 진행상황', true],
   ['11층 : 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110 ', false],
   ['10층 : 1001, 1002, 1003, 1004, 1005', false],
-  ['  9층 : 901, 902, 903, 904, 905', false],
-  ['금일 병실 공실 현황', true]
+  ['  9층 : 901, 902, 903, 904, 905', false]
 ];
 var BIGO_TITLE = '비  고 (외부업체 방문 및 작업내용)';
 
@@ -45,7 +44,7 @@ function textCell(ref, s, text){
 }
 function colL(n){ return String.fromCharCode(64 + n); }           // 1..26 → A..Z
 
-function buildSheet(sheetXml, y, m, d, lines, vacancy){
+function buildSheet(sheetXml, y, m, d, lines){
   var st = {
     left_normal: sOf(sheetXml,'B14'), left_bold: sOf(sheetXml,'B33'), left_close: sOf(sheetXml,'B45'),
     right_normal: sOf(sheetXml,'M14'), right_close: sOf(sheetXml,'M44'),
@@ -65,7 +64,7 @@ function buildSheet(sheetXml, y, m, d, lines, vacancy){
     rows1to13 = rows1to13.replace(new RegExp('<c r="' + c + '10" s="(\\d+)" t="n"></c>'), '<c r="' + c + '10" s="$1"><v>' + STAFF[c] + '</v></c>');
   });
 
-  var merges = [], body = [], rows = lines.map(function(t){ return [t, false]; }).concat(vacancy === false ? FIXED.slice(0, -1) : FIXED), n = rows.length, r = CONTENT_START;
+  var merges = [], body = [], rows = lines.map(function(t){ return [t, false]; }).concat(FIXED), n = rows.length, r = CONTENT_START;
   rows.forEach(function(it, i){
     var text = it[0], bold = it[1], last = i === n - 1, cells = [];
     var b = last ? st.left_close : (bold ? st.left_bold : st.left_normal);
@@ -116,7 +115,7 @@ function build(JSZip, dateStr, text, opts){
   var y = +mt[1], m = +mt[2], d = +mt[3], lines = linesOf(text);
   return JSZip.loadAsync(A.template, {base64: true}).then(function(zip){
     return zip.file('xl/worksheets/sheet1.xml').async('string').then(function(sx){
-      var res = buildSheet(sx, y, m, d, lines, opts && opts.vacancy);
+      var res = buildSheet(sx, y, m, d, lines);
       zip.file('xl/worksheets/sheet1.xml', res.xml, NF);
       return zip.file('xl/workbook.xml').async('string').then(function(wx){
         wx = wx.replace(/(<definedName name="_xlnm.Print_Area"[^>]*>)[^<]*(<\/definedName>)/, function(_, a, b){ return a + "'업무일지'!$A$1:$Q$" + res.lastRow + b; });

@@ -163,7 +163,6 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
     <div class="tl">
       <p>선택한 날짜의 업무일지를 기존 엑셀 양식에 채워서 내려받습니다. 날짜와 업무내용 <b>(14행부터)</b> 외의 칸은 양식 그대로 비워 둡니다.</p>
       <div class="row"><label class="ck">날짜 <input type="date" id="xlDate"></label></div>
-      <label class="ck"><input type="checkbox" id="xlVac" checked> "금일 병실 공실 현황" 줄 포함</label>
       <div id="xlInfo" class="rcount"></div>
       <div class="row"><button type="button" class="btn primary" id="xlGo">엑셀 만들기</button></div>
     </div>
@@ -575,7 +574,7 @@ $('xlGo').addEventListener('click', async () => {
   const btn = $('xlGo'); btn.disabled = true; btn.textContent = '만드는 중…';
   try{
     await xlLoad();
-    const r = await window.Worklog.build(window.JSZip, d, bodyOf(d), {vacancy: $('xlVac').checked});
+    const r = await window.Worklog.build(window.JSZip, d, bodyOf(d), {});
     const a = document.createElement('a'); a.href = URL.createObjectURL(r.blob); a.download = r.name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
     $('xlInfo').textContent = `${r.name} 저장 · 업무 ${r.count}줄`;
