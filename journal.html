@@ -38,39 +38,51 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="index.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0;text-align:right;line-height:1.2}
 
-.head{padding-block:16px 6px}
-h1{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.head{padding-block:16px 4px}
+h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .btn{border:1px solid var(--ink);border-radius:8px;height:40px;padding:0 14px;font-weight:700;cursor:pointer;font-size:14px;background:none;white-space:nowrap}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
 .btn.small{height:34px;padding:0 10px;font-size:13px;border-color:var(--field-line);font-weight:600}
 .btn:disabled{opacity:.45;cursor:default}
-.search input{width:100%;height:44px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;background:var(--surface);font-size:16px}
-.search input:focus{outline:none;border-color:var(--ink)}
-.datebar{display:flex;align-items:center;gap:6px;margin-top:10px}
-.datebar .btn{width:42px;padding:0;flex:none}
-.datebar .today{width:auto;padding:0 12px}
-.datebar label{flex:1;min-width:0;position:relative}
-.datebar .dshow{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid var(--field-line);border-radius:8px;font-weight:800;font-size:16px;white-space:nowrap}
-.datebar input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
-
-main{padding-block:10px 60px}
-.ed textarea{width:100%;min-height:55vh;border:1px solid var(--field-line);border-radius:8px;padding:12px;background:var(--surface);font-size:16px;line-height:1.6;resize:vertical}
-.ed textarea:focus{outline:none;border-color:var(--ink)}
-.edmeta{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:6px}
-.banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+.findbar{position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 0;display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--line)}
+.findbar input{flex:1;min-width:0;height:42px;border:1px solid var(--field-line);border-radius:8px;padding:0 12px;background:var(--surface);font-size:16px}
+.findbar input:focus{outline:none;border-color:var(--ink)}
+.findbar .cnt{font-size:12.5px;color:var(--muted);min-width:44px;text-align:center;white-space:nowrap}
+.findbar .btn.small{width:38px;padding:0;flex:none;height:42px;font-size:15px}
+.findbar .btn.list{width:auto;padding:0 10px;font-size:13px}
+.subbar{display:flex;gap:6px;align-items:center;margin:8px 0}
+.subbar .btn.small{height:36px}
+.subbar label{position:relative}
+.subbar label input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.subbar .sp{flex:1}
+main{padding-block:0 90px}
+.day{padding:14px 0 16px;border-bottom:1px solid var(--line);scroll-margin-top:62px}
+.day h3{margin:0 0 6px;font-size:15px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+.day h3 small{font-weight:500;color:var(--muted);font-size:12px}
+.day.today h3::after{content:"오늘";font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px}
+.day.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{background:var(--mark)}100%{background:transparent}}
+.txt{white-space:pre-wrap;word-break:break-word;font-size:15.5px;line-height:1.6;min-height:1.6em;cursor:text;-webkit-tap-highlight-color:transparent}
+.txt.ph{color:var(--muted)}
+.day textarea{display:block;width:100%;border:1px solid var(--ink);border-radius:8px;padding:8px 10px;margin:-1px;background:var(--surface);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden;min-height:3.4em}
+.day textarea:focus{outline:none}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0}
+mark.cur{background:#FF9F1A;color:#111;outline:2px solid #FF9F1A}
+.fab{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:7;height:44px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer}
+.savestate{font-size:12px;color:var(--muted)}
+.banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin:8px 0}
 .banner.bad{background:var(--bad-soft);color:var(--bad)}
-.rcount{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.rcount{font-size:12.5px;color:var(--muted);margin:10px 0 8px}
 .res{border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .hit{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 14px;cursor:pointer}
 .hit + .hit{border-top:1px solid var(--line)}
 .hit .d{font-weight:800;font-size:14.5px}
 .hit .d small{font-weight:500;color:var(--muted);margin-left:6px;font-size:12px}
 .hit .l{font-size:13.5px;color:var(--ink);margin-top:3px;word-break:break-word}
-mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 .empty{color:var(--muted);text-align:center;padding:30px 14px}
 .more{margin:10px auto;display:block}
-details.tools{margin-top:18px;border:1px solid var(--line);border-radius:10px;padding:0 14px}
-details.tools summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:14px}
+details.tools{margin:8px 0;border:1px solid var(--line);border-radius:10px;padding:0 14px}
+details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14px}
 .tl{display:flex;flex-direction:column;gap:10px;padding:0 0 14px}
 .tl p{margin:0;font-size:13px;color:var(--muted)}
 .tl .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -94,28 +106,28 @@ details.tools summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:14
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
 </div></nav>
 
-<header class="head gut"><div class="wrap">
-  <h1>업무일지</h1>
-  <label class="search"><input id="q" type="search" placeholder="전체 일지에서 찾기 (예: 하이119 FCU)" autocomplete="off" enterkeyhint="search" aria-label="업무일지 검색"></label>
-  <div class="datebar" id="datebar">
-    <button type="button" class="btn" id="prev" aria-label="전날">‹</button>
-    <label><span class="dshow" id="dshow"></span><input type="date" id="date" aria-label="날짜 선택"></label>
-    <button type="button" class="btn" id="next" aria-label="다음날">›</button>
-    <button type="button" class="btn today" id="today">오늘</button>
-  </div>
-</div></header>
+<header class="head gut"><div class="wrap"><h1>업무일지</h1></div></header>
 
 <main class="gut"><div class="wrap">
+  <div class="findbar">
+    <input id="q" type="search" placeholder="찾기 (여러 단어 가능)" autocomplete="off" enterkeyhint="search" aria-label="업무일지 찾기">
+    <span class="cnt" id="cnt"></span>
+    <button type="button" class="btn small" id="fprev" aria-label="이전(과거) 일치" title="과거 방향">▲</button>
+    <button type="button" class="btn small" id="fnext" aria-label="다음(최근) 일치" title="최근 방향">▼</button>
+    <button type="button" class="btn small list" id="flist" aria-pressed="false">목록</button>
+  </div>
   <div id="msgs"></div>
-  <section class="ed" id="editor">
-    <textarea id="body" maxlength="30000" placeholder="-내용을 입력하세요&#10; ㄴ세부 내용" aria-label="업무일지 내용" spellcheck="false"></textarea>
-    <div class="edmeta"><span id="saveState"></span><span id="chars"></span></div>
-  </section>
+  <div class="subbar">
+    <label class="btn small">날짜 이동<input type="date" id="date" aria-label="날짜로 이동"></label>
+    <button type="button" class="btn small" id="today">오늘 ↓</button>
+    <span class="sp"></span><span class="savestate" id="saveState"></span>
+  </div>
   <section id="results" hidden>
     <div class="rcount" id="rcount"></div>
     <div class="res" id="hits"></div>
     <button type="button" class="btn more" id="more" hidden>더 보기</button>
   </section>
+  <section id="notes" aria-label="업무일지"></section>
 
   <details class="tools" id="tools">
     <summary>가져오기 · 내보내기</summary>
@@ -131,6 +143,7 @@ details.tools summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:14
     </div>
   </details>
 </div></main>
+<button type="button" class="fab" id="fab" hidden>↓ 맨 아래</button>
 
 <div class="gate" id="gate" hidden>
   <form class="gatebox" id="gateForm">
@@ -199,19 +212,17 @@ async function pull(first){
     const page = await sb('journal?select=date,body,updated_at&order=updated_at.asc&limit=1000&offset=' + off + filter);
     rows.push(...page); if(page.length < 1000) break;
   }
-  let touchedCur = false;
+  const changed = [];
   for(const r of rows){
     if(!lastTs || Date.parse(r.updated_at) > Date.parse(lastTs)) lastTs = r.updated_at;
     if(r.date in pending) continue;                       // 내 미전송 변경이 우선
+    const had = entries[r.date] ? entries[r.date].body : null;
     entries[r.date] = {body: r.body, ts: r.updated_at};
-    if(r.date === curDate) touchedCur = true;
+    if(had !== r.body) changed.push(r.date);
   }
   if(rows.length) saveCache();
-  if(touchedCur){
-    const ta = $('body'), v = bodyOf(curDate);
-    if(ta.value !== v && Date.now() - typedAt > 2500){ ta.value = v; $('chars').textContent = v.length + '자'; $('saveState').textContent = ''; }
-  }
-  if(rows.length && !$('results').hidden) runSearch();
+  if(changed.length > 60) renderAll(); else changed.forEach(refreshDay);
+  if(changed.length){ collectMarks(true); if(listMode) runList(); }
 }
 async function flush(){
   if(flushing || !configured()) return;
@@ -236,6 +247,7 @@ async function sync(withGate){
     await flush();
     await pull();
     loaded = true; online = true;
+    if(firstLoad){ firstLoad = false; if(!userMoved) window.scrollTo(0, document.documentElement.scrollHeight); }
   }catch(e){ online = false; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
   status(); renderMsgs();
 }
@@ -246,80 +258,175 @@ function renderMsgs(){
   $('msgs').innerHTML = m.join('');
 }
 
-/* ---------- 편집 ---------- */
-function openDate(d, opt){
-  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; flush(); }
-  curDate = d; $('date').value = d; $('dshow').textContent = longDate(d);
-  const ta = $('body'); ta.value = bodyOf(d); $('chars').textContent = ta.value.length + '자';
-  $('saveState').textContent = entries[d] || (d in pending) ? '' : '이 날짜는 아직 기록이 없습니다';
-  showEditor(true);
-  if(opt && opt.q) scrollToTerm(opt.q);
-  else ta.scrollTop = 0;
+/* ---------- 메모장 보기: 날짜별 블록을 이어서 쌓고, 맨 아래가 오늘 ---------- */
+const todayStr = () => ymd(new Date());
+let firstLoad = true, userMoved = false;
+['touchmove','wheel'].forEach(ev => window.addEventListener(ev, () => { userMoved = true; }, {passive:true, once:true}));
+let extra = new Set();                 // 내용이 없어도 보여 줄 날짜(오늘, 날짜 이동으로 추가한 날)
+let editing = null, terms = [], marks = [], mi = -1;
+const notes = $('notes');
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function hlHtml(text){
+  if(!terms.length) return esc(text);
+  const re = new RegExp('(' + terms.map(reEsc).join('|') + ')', 'gi');
+  return text.split(re).map((p, i) => i % 2 ? `<mark>${esc(p)}</mark>` : esc(p)).join('');
 }
-$('body').addEventListener('input', e => {
-  typedAt = Date.now(); const v = e.target.value;
-  pending[curDate] = v; savePending(); $('chars').textContent = v.length + '자'; $('saveState').textContent = '입력 중…'; status();
-  clearTimeout(saveTimer); saveTimer = setTimeout(async () => { saveTimer = null; await flush(); $('saveState').textContent = Object.keys(pending).length ? '기기에 보관 중 (연결되면 자동 저장)' : '저장됨'; }, 800);
+function heading(d){ const dt = parseD(d), y = dt.getFullYear(), cy = new Date().getFullYear();
+  return `${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일` + (y !== cy ? `<small>${y}년</small>` : ''); }
+function dayHTML(d){
+  const b = bodyOf(d);
+  return `<section class="day${d === todayStr() ? ' today' : ''}" data-d="${d}"><h3>${heading(d)}</h3><div class="txt${b ? '' : ' ph'}">${b ? hlHtml(b) : '탭하여 입력'}</div></section>`;
+}
+function allDates(){
+  const s = new Set([...extra, todayStr()]);
+  for(const d of Object.keys(entries)) if(entries[d].body.trim()) s.add(d);
+  for(const d of Object.keys(pending)) if(pending[d].trim()) s.add(d);
+  if(editing) s.add(editing);
+  return [...s].sort();
+}
+function renderAll(){
+  const keep = editing; if(keep) stopEdit(true);
+  notes.innerHTML = allDates().map(dayHTML).join('');
+  collectMarks();
+}
+function sectionOf(d){ return notes.querySelector(`.day[data-d="${d}"]`); }
+function refreshDay(d){                      // 한 날짜만 다시 그림 (없으면 순서에 맞게 끼워 넣음)
+  if(d === editing) return;
+  const sec = sectionOf(d), has = allDates().includes(d);
+  if(sec && has){ sec.outerHTML = dayHTML(d); }
+  else if(sec && !has){ sec.remove(); }
+  else if(has){
+    const next = [...notes.querySelectorAll('.day')].find(x => x.dataset.d > d);
+    if(next) next.insertAdjacentHTML('beforebegin', dayHTML(d)); else notes.insertAdjacentHTML('beforeend', dayHTML(d));
+  }
+}
+function autosize(ta){ ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+function offsetAt(txt, x, y){                // 탭한 위치를 글자 번호로 (캐럿을 그 자리에 놓기 위해)
+  try{
+    let node, off;
+    if(document.caretPositionFromPoint){ const p = document.caretPositionFromPoint(x, y); if(p){ node = p.offsetNode; off = p.offset; } }
+    else if(document.caretRangeFromPoint){ const r = document.caretRangeFromPoint(x, y); if(r){ node = r.startContainer; off = r.startOffset; } }
+    if(!node || !txt.contains(node)) return null;
+    const r2 = document.createRange(); r2.selectNodeContents(txt); r2.setEnd(node, off); return r2.toString().length;
+  }catch(e){ return null; }
+}
+function startEdit(d, off){
+  if(editing === d) return;
+  if(editing) stopEdit();
+  let sec = sectionOf(d); if(!sec){ extra.add(d); refreshDay(d); sec = sectionOf(d); }
+  editing = d;
+  const txt = sec.querySelector('.txt'), ta = document.createElement('textarea');
+  ta.value = bodyOf(d); ta.placeholder = '-내용을 입력하세요\n ㄴ세부 내용'; ta.maxLength = 30000; ta.spellcheck = false; ta.setAttribute('aria-label', '업무일지 내용');
+  txt.replaceWith(ta); autosize(ta); ta.focus({preventScroll: true});
+  const p = off == null ? ta.value.length : Math.min(off, ta.value.length); ta.setSelectionRange(p, p);
+  ta.addEventListener('input', () => {
+    typedAt = Date.now(); const v = ta.value; autosize(ta);
+    pending[d] = v; savePending(); $('saveState').textContent = '입력 중…'; status();
+    clearTimeout(saveTimer); saveTimer = setTimeout(doSave, 800);
+  });
+  ta.addEventListener('blur', () => { if(editing === d) stopEdit(); });
+}
+async function doSave(){ saveTimer = null; await flush(); $('saveState').textContent = Object.keys(pending).length ? '기기에 보관 중' : '저장됨'; }
+function stopEdit(silent){
+  const d = editing; if(!d) return; editing = null;
+  if(saveTimer){ clearTimeout(saveTimer); doSave(); }
+  const sec = sectionOf(d); if(!sec) return;
+  if(!bodyOf(d).trim() && d !== todayStr() && !extra.has(d)) { sec.remove(); return; }
+  sec.outerHTML = dayHTML(d);
+  if(!silent) collectMarks(true);
+}
+notes.addEventListener('click', e => {
+  const txt = e.target.closest('.txt'); if(!txt) return;
+  const sel = window.getSelection && String(window.getSelection()); if(sel) return;     // 글자를 드래그로 선택 중이면 편집 전환하지 않음
+  const d = txt.closest('.day').dataset.d; const off = txt.classList.contains('ph') ? 0 : offsetAt(txt, e.clientX, e.clientY);
+  startEdit(d, off);
 });
-$('prev').onclick = () => openDate(addDays(curDate, -1));
-$('next').onclick = () => openDate(addDays(curDate, 1));
-$('today').onclick = () => openDate(ymd(new Date()));
-$('date').addEventListener('change', e => { if(e.target.value) openDate(e.target.value); });
 window.addEventListener('pagehide', () => { if(saveTimer){ clearTimeout(saveTimer); flush(); } });
 
-function scrollToTerm(q){
-  const ta = $('body'), terms = q.toLowerCase().split(/\s+/).filter(Boolean), lines = ta.value.split('\n');
-  let idx = lines.findIndex(l => terms.some(t => l.toLowerCase().includes(t))); if(idx < 0) return;
-  const mirror = document.createElement('div'), cs = getComputedStyle(ta);
-  mirror.style.cssText = `position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:${ta.clientWidth}px;font:${cs.font};line-height:${cs.lineHeight};padding:${cs.padding};box-sizing:border-box`;
-  mirror.textContent = lines.slice(0, idx).join('\n') + '\n'; document.body.appendChild(mirror);
-  const y = mirror.offsetHeight; mirror.remove();
-  ta.scrollTop = Math.max(0, y - 40);
-  ta.scrollIntoView({block:'start'});
+function scrollToDay(d, flash){
+  let sec = sectionOf(d);
+  if(!sec){                                              // 기록이 없는 날짜: 가장 가까운 이전 날짜로
+    const prev = [...notes.querySelectorAll('.day')].filter(x => x.dataset.d < d).pop(); sec = prev || notes.querySelector('.day');
+  }
+  if(!sec) return; sec.scrollIntoView({block:'start'});
+  if(flash){ sec.classList.remove('flash'); void sec.offsetWidth; sec.classList.add('flash'); }
 }
+$('today').onclick = () => { stopEdit(); window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'}); };
+$('date').addEventListener('change', e => {
+  const d = e.target.value; if(!d) return; e.target.value = '';
+  const had = !!sectionOf(d) && !!bodyOf(d).trim();
+  if(!sectionOf(d)){ extra.add(d); refreshDay(d); }
+  scrollToDay(d, true);
+  if(!had) setTimeout(() => startEdit(d, 0), 350);          // 기록 없는 날짜는 바로 입력할 수 있게
+});
+const fab = $('fab');
+window.addEventListener('scroll', () => { const far = document.documentElement.scrollHeight - window.scrollY - innerHeight > 900; fab.hidden = !far; }, {passive:true});
+fab.onclick = () => window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});
 
-/* ---------- 검색 ---------- */
-let hitsAll = [], shown = 0, curQ = '';
-function showEditor(on){ $('editor').hidden = !on; $('datebar').hidden = !on; $('results').hidden = on; }
-function runSearch(){
-  const q = $('q').value.trim(); curQ = q;
-  if(!q){ showEditor(true); return; }
-  const terms = [...new Set(q.toLowerCase().split(/\s+/).filter(Boolean))];
+/* ---------- 찾기 ---------- */
+function collectMarks(keepIdx){
+  marks = [...notes.querySelectorAll('mark')];
+  if(!keepIdx) mi = marks.length - 1;                       // 최근(맨 아래) 일치부터
+  if(mi >= marks.length) mi = marks.length - 1;
+  paintCur(false);
+}
+function paintCur(scroll){
+  marks.forEach(m => m.classList.remove('cur'));
+  const m = marks[mi];
+  $('cnt').textContent = terms.length ? (marks.length ? `${mi + 1}/${marks.length}` : '0') : '';
+  if(!m) return; m.classList.add('cur');
+  if(scroll) m.scrollIntoView({block:'center'});
+}
+let qTimer = null, listMode = false;
+function setTerms(){ terms = [...new Set($('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean))]; }
+function runFind(jump){
+  if(editing) stopEdit(true);
+  setTerms(); renderAll();
+  if(terms.length && jump !== false) paintCur(true);
+  if(listMode) runList();
+}
+$('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(runFind, 200); });
+$('q').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); step(e.shiftKey ? 1 : -1); } if(e.key === 'Escape'){ $('q').value = ''; runFind(false); } });
+function step(dir){ if(!marks.length) return; mi = (mi + dir + marks.length) % marks.length; paintCur(true); }
+$('fprev').onclick = () => step(-1);        // ▲ 과거 방향
+$('fnext').onclick = () => step(1);         // ▼ 최근 방향
+
+/* 목록 보기: 검색어가 모두 들어 있는 날짜만 모아서 */
+let hitsAll = [], shown = 0;
+$('flist').onclick = () => { listMode = !listMode; $('flist').setAttribute('aria-pressed', String(listMode)); $('flist').style.background = listMode ? 'var(--accent)' : ''; $('flist').style.color = listMode ? 'var(--accent-ink)' : ''; if(listMode) runList(); else { $('results').hidden = true; notes.hidden = false; } };
+function runList(){
+  if(!terms.length){ $('results').hidden = true; notes.hidden = false; return; }
   hitsAll = [];
   const dates = new Set([...Object.keys(entries), ...Object.keys(pending)]);
   for(const d of [...dates].sort().reverse()){
     const body = bodyOf(d), low = body.toLowerCase();
-    if(!terms.every(t => low.includes(t))) continue;               // 모든 검색어가 그날 안에 있어야 함
-    const lines = body.split('\n').filter(l => terms.some(t => l.toLowerCase().includes(t)));
-    hitsAll.push({d, lines});
+    if(!terms.every(t => low.includes(t))) continue;
+    hitsAll.push({d, lines: body.split('\n').filter(l => terms.some(t => l.toLowerCase().includes(t)))});
   }
-  shown = 0; $('hits').innerHTML = ''; showEditor(false);
+  shown = 0; $('hits').innerHTML = ''; notes.hidden = true; $('results').hidden = false;
   const total = hitsAll.reduce((a, h) => a + h.lines.length, 0);
-  $('rcount').textContent = hitsAll.length ? `${hitsAll.length}일 · ${total}줄 일치` : '';
-  if(!hitsAll.length) $('hits').innerHTML = `<div class="empty">“${esc(q)}” 검색 결과가 없습니다.${loaded ? '' : '<br>서버에 연결되지 않아 이 기기에 보관된 기록에서만 찾았습니다.'}</div>`;
+  $('rcount').textContent = hitsAll.length ? `${hitsAll.length}일 · ${total}줄 일치 (검색어가 모두 들어 있는 날)` : '';
+  if(!hitsAll.length) $('hits').innerHTML = `<div class="empty">검색 결과가 없습니다.</div>`;
   more();
 }
-function hl(line, terms){
-  const re = new RegExp('(' + terms.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
-  return line.trim().split(re).map((p, i) => i % 2 ? `<mark>${esc(p)}</mark>` : esc(p)).join('');
-}
 function more(){
-  const terms = [...new Set(curQ.toLowerCase().split(/\s+/).filter(Boolean))];
   const chunk = hitsAll.slice(shown, shown + 40); shown += chunk.length;
   $('hits').insertAdjacentHTML('beforeend', chunk.map(h => `
     <button type="button" class="hit" data-d="${h.d}">
       <div class="d">${esc(longDate(h.d))}<small>${h.lines.length}줄</small></div>
-      ${h.lines.slice(0, 3).map(l => `<div class="l">${hl(l, terms)}</div>`).join('')}
+      ${h.lines.slice(0, 3).map(l => `<div class="l">${hlHtml(l.trim())}</div>`).join('')}
       ${h.lines.length > 3 ? `<div class="l" style="color:var(--muted)">… 외 ${h.lines.length - 3}줄</div>` : ''}
     </button>`).join(''));
   $('more').hidden = shown >= hitsAll.length;
 }
-let qTimer = null;
-$('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(runSearch, 150); });
 $('more').onclick = more;
 $('hits').addEventListener('click', e => {
   const b = e.target.closest('.hit'); if(!b) return;
-  const q = curQ; $('q').value = ''; openDate(b.dataset.d, {q});
+  listMode = false; $('flist').setAttribute('aria-pressed', 'false'); $('flist').style.background = ''; $('flist').style.color = '';
+  $('results').hidden = true; $('hits').innerHTML = ''; notes.hidden = false;
+  const sec = sectionOf(b.dataset.d); if(!sec) return;
+  const m = sec.querySelector('mark'); marks = [...notes.querySelectorAll('mark')]; mi = Math.max(0, marks.indexOf(m));
+  scrollToDay(b.dataset.d, true); paintCur(false); if(m) m.scrollIntoView({block:'center'});
 });
 
 /* ---------- 가져오기 / 내보내기 ---------- */
@@ -362,7 +469,7 @@ $('impGo').addEventListener('click', async () => {
       $('impInfo').textContent = `가져오는 중… ${done}/${parsed.length}`;
     }
     $('impInfo').textContent = `${done}일치를 가져왔습니다.`; impText = ''; $('impFile').value = '';
-    await pull(); openDate(curDate);
+    await pull(); renderAll(); scrollToDay(todayStr());
   }catch(err){ $('impInfo').textContent = `${done}일치까지 가져온 뒤 실패했습니다. 같은 파일로 다시 가져오면 이어서 됩니다. (${err.status === 401 || err.status === 403 ? '팀 코드 확인' : '연결 확인'})`; }
 });
 $('expBtn').addEventListener('click', () => {
@@ -377,7 +484,9 @@ $('expBtn').addEventListener('click', () => {
 window.addEventListener('online', () => sync());
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') sync(); });
 setInterval(() => { if(document.visibilityState === 'visible' && $('gate').hidden) sync(); }, 15000);
-openDate(curDate); renderMsgs(); status(); sync();
+renderAll(); renderMsgs(); status();
+requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight)); window.addEventListener('load', () => { window.scrollTo(0, document.documentElement.scrollHeight); }, {once:true});
+sync();
 })();
 </script>
 </body>
