@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 
-<head>
+<head><script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("app.theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>시설팀 근무표</title>
@@ -1633,12 +1633,12 @@
                 </svg>`;
             }
 
-            storage.setItem('theme', newTheme);
+            try{localStorage.setItem('app.theme', newTheme)}catch(e){}
         }
 
         // 테마 초기화
         function initTheme() {
-            const savedTheme = storage.getItem('theme') || 'light';
+            const savedTheme = (function(){try{return localStorage.getItem('app.theme')}catch(e){return null}})() === 'light' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
 
             const toggle = document.getElementById('themeToggle');

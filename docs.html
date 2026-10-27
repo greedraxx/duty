@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko">
-<head>
+<head><script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("app.theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
@@ -15,9 +15,9 @@
   --accent:#111111; --accent-ink:#FFFFFF; --bad:#C62828; --bad-soft:#FDECEA; --ok:#1B7F3B;
   --f-ui:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+:root[data-theme="dark"]{
   --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
-  --accent:#F2F2F2; --accent-ink:#111111; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; color-scheme:dark}}
+  --accent:#F2F2F2; --accent-ink:#111111; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -37,7 +37,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .appnav a[href="schedule.html"]{color:#1B8A3A}
 .appnav a[href="journal.html"]{color:var(--ink)}
 .appnav a[href="docs.html"]{color:var(--muted)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="duty.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
+:root[data-theme="dark"] .appnav a[href="duty.html"]{color:#FFD54A}:root[data-theme="dark"] .appnav a[href="schedule.html"]{color:#6FD38A}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
 
 .head{padding-block:18px 8px}
@@ -120,9 +120,9 @@ table.xl a{color:inherit;font-weight:700}
 .bnav a[aria-current="page"]{border-top-color:currentColor}
 .bnav.hide{display:none}
 @media print{.bnav{display:none!important}}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .bnav a[href="duty.html"]{color:#FFD54A}:root:not([data-theme="light"]) .bnav a[href="schedule.html"]{color:#6FD38A}}
+:root[data-theme="dark"] .bnav a[href="duty.html"]{color:#FFD54A}:root[data-theme="dark"] .bnav a[href="schedule.html"]{color:#6FD38A}
 main{padding-bottom:calc(var(--bnav-h) + 60px)}
-</style>
+.themebtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);cursor:pointer;padding:0}a + .themebtn{margin-left:auto}.sync + .themebtn{margin-left:6px}.navrow .sync{flex:1 1 0;min-width:0;justify-content:flex-end}.navrow .sync span:last-child{white-space:normal}</style>
 </head>
 <body>
 <nav class="appnav gut"><div class="wrap navrow">
@@ -131,7 +131,7 @@ main{padding-bottom:calc(var(--bnav-h) + 60px)}
   <a href="schedule.html">근무표</a>
   <a href="docs.html" aria-current="page">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
-</div></nav>
+<button type="button" class="themebtn" id="themeBtn"></button></div></nav>
 <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html">근무표</a><a href="docs.html" aria-current="page">문서</a></div></nav>
 
 <header class="head gut"><div class="wrap">
@@ -472,5 +472,5 @@ render(); load();
 })();
 </script>
 <script>(()=>{const b=document.querySelector('.bnav');if(!b||!matchMedia('(pointer: coarse)').matches)return;const t=e=>e.target&&e.target.matches&&e.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]),textarea');document.addEventListener('focusin',e=>{if(t(e))b.classList.add('hide')});const show=()=>setTimeout(()=>{if(!t({target:document.activeElement}))b.classList.remove('hide')},60);document.addEventListener('focusout',show);document.addEventListener('blur',show,true)})();</script>
-</body>
+<script>(()=>{const b=document.getElementById("themeBtn");if(!b)return;const SUN="<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42\"/></svg>",MOON="<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M21.64 13a1 1 0 0 0-1.05-.14 8.05 8.05 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05z\"/></svg>";const cur=()=>document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";const paint=()=>{const d=cur()==="dark";b.innerHTML=d?SUN:MOON;b.title=b.ariaLabel=d?"라이트 모드로 전환":"다크 모드로 전환"};b.addEventListener("click",()=>{const n=cur()==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("app.theme",n)}catch(e){}paint()});paint()})();</script></body>
 </html>
