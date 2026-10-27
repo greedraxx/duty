@@ -216,6 +216,9 @@ html,body{margin:0}
 .navrow{display:flex;gap:4px}
 .appnav a{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid transparent}
 .appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
+.appnav a[href="index.html"]{color:#D4A000}
+.appnav a[href="schedule.html"]{color:#1B8A3A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="index.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
 #printArea{display:none}
 @page{size:A4 portrait;margin:0}
 @media print{
