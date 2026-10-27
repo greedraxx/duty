@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<title>시설팀 서류</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#111111; --muted:#777777; --line:#E4E4E4; --field-line:#BDBDBD; --soft:#F3F3F3;
+  --accent:#111111; --accent-ink:#FFFFFF; --bad:#C62828; --bad-soft:#FDECEA; --ok:#1B7F3B;
+  --f-ui:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
+  --accent:#F2F2F2; --accent-ink:#111111; --bad:#FF8A80; --bad-soft:#331816; --ok:#6FD38A; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.dot.on{background:var(--ok)}.dot.busy{background:#C99700}.dot.off{background:var(--bad)}
+
+.appnav{padding-top:10px}
+.navrow{display:flex;align-items:center;gap:4px}
+.appnav a{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid transparent}
+.appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
+.sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+
+.head{padding-block:18px 8px}
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.btn{border:1px solid var(--ink);border-radius:8px;height:40px;padding:0 16px;font-weight:700;cursor:pointer;font-size:14px;background:none;white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.small{height:32px;padding:0 10px;font-size:13px;border-color:var(--field-line);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+
+.search{display:block;margin-top:12px}
+.search input{width:100%;height:44px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;background:var(--surface);font-size:16px}
+.search input:focus{outline:none;border-color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--field-line);background:none;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+main{padding-block:12px 60px}
+.count{font-size:12.5px;color:var(--muted);margin:6px 0}
+.banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.banner.info{background:var(--soft)}
+.list{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.item{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.item + .item{border-top:1px solid var(--line)}
+.item.hid{opacity:.55}
+.item .top{display:flex;align-items:flex-start;gap:10px}
+.item .ttl{flex:1;min-width:0;font-weight:700;font-size:15px;word-break:break-word}
+.tag{font-size:11.5px;font-weight:700;border:1px solid var(--field-line);border-radius:999px;padding:1px 8px;color:var(--muted);white-space:nowrap}
+.meta{font-size:12.5px;color:var(--muted);word-break:break-all}
+.note{font-size:13px}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.empty{color:var(--muted);text-align:center;padding:30px 14px}
+.toggle{margin-top:14px;font-size:13px;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer;padding:0}
+
+.panel{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.panel h2{margin:0;font-size:15px}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.fld input,.fld textarea{border:1px solid var(--field-line);border-radius:6px;background:var(--surface);padding:9px 10px;font-size:16px;width:100%}
+.fld textarea{min-height:70px;resize:vertical}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--ink)}
+.filerow{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line);padding-top:8px}
+.filerow .st{font-size:12.5px;color:var(--muted)}
+.filerow .st.err{color:var(--bad)} .filerow .st.done{color:var(--ok)}
+.bar{height:4px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.row2{display:flex;gap:8px;flex-wrap:wrap}
+
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.gatebox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.gatebox h2{margin:0;font-size:20px}
+.gatebox p{margin:0;font-size:13px;color:var(--muted)}
+.gatebox input{height:48px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;font-size:18px;background:var(--surface)}
+.gatebox input:focus{outline:none;border-color:var(--ink)}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<nav class="appnav gut"><div class="wrap navrow">
+  <a href="index.html">당직일지</a>
+  <a href="schedule.html">근무표</a>
+  <a href="docs.html" aria-current="page">서류</a>
+  <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
+</div></nav>
+
+<header class="head gut"><div class="wrap">
+  <div class="titlebar">
+    <h1>시설팀 서류</h1>
+    <button type="button" class="btn primary" id="uploadBtn">서류 올리기</button>
+  </div>
+  <label class="search"><input id="q" type="search" placeholder="제목·분류·메모·파일명 검색" autocomplete="off" aria-label="서류 검색"></label>
+  <div class="chips" id="chips"></div>
+</div></header>
+
+<main class="gut"><div class="wrap">
+  <div id="msgs"></div>
+
+  <section class="panel" id="uploadPanel" hidden>
+    <h2>서류 올리기</h2>
+    <label class="fld">분류 (목록에서 고르거나 새로 입력)
+      <input id="upCat" list="catList" placeholder="예: 소방" maxlength="40" autocomplete="off">
+    </label>
+    <datalist id="catList"></datalist>
+    <label class="fld">파일 (여러 개 선택 가능, 1개당 최대 25MB)
+      <input id="upFiles" type="file" multiple>
+    </label>
+    <div id="upRows"></div>
+    <div class="row2">
+      <button type="button" class="btn primary" id="upGo" disabled>올리기</button>
+      <button type="button" class="btn" id="upCancel">닫기</button>
+    </div>
+    <div class="meta" id="upMsg"></div>
+  </section>
+
+  <section class="panel" id="editPanel" hidden>
+    <h2>서류 정보 수정</h2>
+    <label class="fld">제목<input id="edTitle" maxlength="200"></label>
+    <label class="fld">분류<input id="edCat" list="catList" maxlength="40" autocomplete="off"></label>
+    <label class="fld">메모<textarea id="edNote" maxlength="2000"></textarea></label>
+    <div class="row2">
+      <button type="button" class="btn primary" id="edSave">저장</button>
+      <button type="button" class="btn" id="edCancel">취소</button>
+    </div>
+    <div class="meta" id="edMsg"></div>
+  </section>
+
+  <div class="count" id="count"></div>
+  <div class="list" id="list"></div>
+  <button type="button" class="toggle" id="showHidden" hidden></button>
+</div></main>
+
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <h2>시설팀 서류</h2>
+    <p>팀 코드를 입력하세요. 이 기기에 기억되어 다음부터는 묻지 않습니다.</p>
+    <input id="gateInput" type="password" autocomplete="off" aria-label="팀 코드" required>
+    <button type="submit" class="btn primary">확인</button>
+    <p class="err" id="gateMsg"></p>
+  </form>
+</div>
+
+<script>
+(() => {
+const CFG = window.DUTY_CONFIG || {};
+const $ = id => document.getElementById(id);
+const MAX_BYTES = 25 * 1024 * 1024;
+const CHUNK_BYTES = 510 * 1024;            // 원본 조각 크기 (base64 로 약 680KB)
+const DEFAULT_CATS = ['소방', '전기', '기계', '건축', '계약', '법정점검', '연락처', '기타'];
+const OPEN_IN_TAB = /^(application\/pdf|image\/(png|jpe?g|gif|webp)|text\/plain)$/;
+let docs = [], showHidden = false, activeCat = '', editId = null, loaded = false;
+
+const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
+function configured(){ return !!(CFG.supabaseUrl && CFG.supabaseKey && !/YOUR_|여기에/.test(CFG.supabaseUrl + CFG.supabaseKey)); }
+function teamCode(){ return store.get('dutylog.team') || ''; }
+function setSync(kind, text){ $('syncDot').className = 'dot ' + kind; $('syncText').textContent = text; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtSize(n){ return n >= 1048576 ? (n/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n/1024)) + ' KB'; }
+function fmtDate(s){ const d = new Date(s); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+
+async function sb(path, opt){
+  opt = opt || {};
+  const headers = Object.assign({apikey: CFG.supabaseKey, Authorization: 'Bearer ' + CFG.supabaseKey, 'x-team-code': teamCode()}, opt.headers || {});
+  const r = await fetch(CFG.supabaseUrl.replace(/\/+$/,'') + '/rest/v1/' + path, Object.assign({}, opt, {headers, cache:'no-store'}));
+  if(!r.ok){ const e = new Error(await r.text().catch(() => String(r.status))); e.status = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const post = (table, rows, prefer) => sb(table, {method:'POST', headers:{'Content-Type':'application/json', Prefer: prefer || 'return=minimal'}, body: JSON.stringify(rows)});
+
+/* ---------- 목록 ---------- */
+async function load(){
+  if(!configured()){ setSync('off','설정 필요'); render(); return; }
+  try{
+    const ok = await sb('rpc/team_check', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if(ok === false){ showGate(teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off','팀 코드 필요'); return; }
+    $('gate').hidden = true;
+    const rows = [];
+    for(let off = 0; ; off += 1000){
+      const page = await sb('docs?select=id,title,category,note,file_name,mime,size,chunks,hidden,created_at&order=created_at.desc&limit=1000&offset=' + off);
+      rows.push(...page); if(page.length < 1000) break;
+    }
+    docs = rows; loaded = true;
+    setSync('on', '연결됨 ' + new Date().toTimeString().slice(0,5));
+  }catch(e){
+    setSync('off', loaded ? '연결 끊김(목록은 마지막 상태)' : '연결 안 됨');
+    if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.');
+  }
+  render();
+}
+
+function cats(){
+  const set = new Set(DEFAULT_CATS); docs.forEach(d => set.add(d.category));
+  return [...set];
+}
+function render(){
+  const msgs = [];
+  if(!configured()) msgs.push('<div class="banner bad">config.js에 Supabase 주소와 키가 없습니다.</div>');
+  else if(!loaded) msgs.push('<div class="banner bad">서버에 연결되지 않았습니다. 서류는 인터넷 연결이 있어야 볼 수 있습니다.</div>');
+  $('msgs').innerHTML = msgs.join('');
+
+  const present = [...new Set(docs.filter(d => showHidden || !d.hidden).map(d => d.category))];
+  $('chips').innerHTML = (present.length ? ['', ...present] : []).map(c =>
+    `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${activeCat === c}">${c ? esc(c) : '전체'}</button>`).join('');
+  $('catList').innerHTML = cats().map(c => `<option value="${esc(c)}">`).join('');
+
+  const q = $('q').value.trim().toLowerCase();
+  const rows = docs.filter(d => (showHidden || !d.hidden) && (!activeCat || d.category === activeCat) &&
+    (!q || [d.title, d.category, d.note, d.file_name].join(' ').toLowerCase().includes(q)));
+  $('count').textContent = loaded ? `${rows.length}건` + (q || activeCat ? ` (전체 ${docs.filter(d => showHidden || !d.hidden).length}건)` : '') : '';
+  $('list').hidden = !rows.length && !loaded;
+  $('list').innerHTML = rows.length ? rows.map(d => `
+    <div class="item ${d.hidden ? 'hid' : ''}" data-id="${d.id}">
+      <div class="top"><div class="ttl">${esc(d.title)}</div><span class="tag">${esc(d.category)}</span></div>
+      <div class="meta">${esc(d.file_name)} · ${fmtSize(d.size)} · ${fmtDate(d.created_at)}${d.hidden ? ' · 숨김' : ''}</div>
+      ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
+      <div class="acts">
+        <button type="button" class="btn small" data-a="open">${OPEN_IN_TAB.test(d.mime) ? '열기' : '내려받기'}</button>
+        ${OPEN_IN_TAB.test(d.mime) ? '<button type="button" class="btn small" data-a="save">내려받기</button>' : ''}
+        <button type="button" class="btn small" data-a="edit">수정</button>
+        <button type="button" class="btn small" data-a="hide">${d.hidden ? '복원' : '숨김'}</button>
+      </div>
+    </div>`).join('') : (loaded ? `<div class="empty">${q || activeCat ? '검색 결과가 없습니다.' : '올린 서류가 없습니다. 위의 “서류 올리기”로 시작하세요.'}</div>` : '');
+  const hiddenN = docs.filter(d => d.hidden).length;
+  $('showHidden').hidden = !hiddenN;
+  $('showHidden').textContent = showHidden ? '숨긴 서류 감추기' : `숨긴 서류 ${hiddenN}건 보기`;
+}
+
+$('q').addEventListener('input', render);
+$('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; activeCat = b.dataset.c; render(); });
+$('showHidden').addEventListener('click', () => { showHidden = !showHidden; render(); });
+
+/* ---------- 열기 / 내려받기 ---------- */
+function b64ToBytes(b64){ const bin = atob(b64); const out = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+async function fetchBlob(d){
+  const rows = await sb(`doc_chunks?select=seq,data&doc_id=eq.${d.id}&order=seq.asc`);
+  if(rows.length !== d.chunks) throw new Error('조각이 모두 있지 않습니다 (' + rows.length + '/' + d.chunks + ')');
+  const parts = rows.map((r, i) => { if(r.seq !== i) throw new Error('조각 순서 오류'); return b64ToBytes(r.data); });
+  const blob = new Blob(parts, {type: d.mime || 'application/octet-stream'});
+  if(blob.size !== d.size) throw new Error('파일 크기가 맞지 않습니다');
+  return blob;
+}
+function saveBlob(blob, name){
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function openDoc(d, forceSave, btn){
+  const tab = (!forceSave && OPEN_IN_TAB.test(d.mime)) ? window.open('', '_blank') : null;   // 팝업 차단 회피: 클릭 직후 먼저 연다
+  const label = btn.textContent; btn.disabled = true; btn.textContent = '불러오는 중…';
+  try{
+    const blob = await fetchBlob(d);
+    if(tab){ tab.location.href = URL.createObjectURL(blob); }
+    else saveBlob(blob, d.file_name);
+  }catch(e){
+    if(tab) tab.close();
+    alert('서류를 불러오지 못했습니다.\n' + (e.message || '').slice(0, 120));
+  }finally{ btn.disabled = false; btn.textContent = label; }
+}
+
+$('list').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-a]'); if(!btn) return;
+  const id = btn.closest('.item').dataset.id; const d = docs.find(x => x.id === id); if(!d) return;
+  const a = btn.dataset.a;
+  if(a === 'open') openDoc(d, false, btn);
+  else if(a === 'save') openDoc(d, true, btn);
+  else if(a === 'edit'){ editId = id; $('edTitle').value = d.title; $('edCat').value = d.category; $('edNote').value = d.note; $('edMsg').textContent = ''; $('editPanel').hidden = false; $('uploadPanel').hidden = true; window.scrollTo(0, 0); $('edTitle').focus(); }
+  else if(a === 'hide'){
+    const hidden = !d.hidden;
+    try{ await sb('docs?id=eq.' + id, {method:'PATCH', headers:{'Content-Type':'application/json', Prefer:'return=minimal'}, body: JSON.stringify({hidden})}); d.hidden = hidden; render(); }
+    catch(err){ alert('저장하지 못했습니다. 연결과 팀 코드를 확인하세요.'); }
+  }
+});
+$('edCancel').addEventListener('click', () => { $('editPanel').hidden = true; });
+$('edSave').addEventListener('click', async () => {
+  const title = $('edTitle').value.trim(); if(!title){ $('edMsg').textContent = '제목을 입력하세요.'; return; }
+  const body = {title, category: $('edCat').value.trim() || '기타', note: $('edNote').value.trim()};
+  try{
+    await sb('docs?id=eq.' + editId, {method:'PATCH', headers:{'Content-Type':'application/json', Prefer:'return=minimal'}, body: JSON.stringify(body)});
+    Object.assign(docs.find(x => x.id === editId), body); $('editPanel').hidden = true; render();
+  }catch(e){ $('edMsg').textContent = '저장하지 못했습니다. 연결과 팀 코드를 확인하세요.'; }
+});
+
+/* ---------- 올리기 ---------- */
+let picked = [];
+$('uploadBtn').addEventListener('click', () => { $('uploadPanel').hidden = !$('uploadPanel').hidden; $('editPanel').hidden = true; });
+$('upCancel').addEventListener('click', () => { $('uploadPanel').hidden = true; });
+$('upFiles').addEventListener('change', () => {
+  picked = [...$('upFiles').files].map(f => ({file: f, title: f.name.replace(/\.[^.]+$/, ''), state: f.size > MAX_BYTES ? 'big' : (f.size === 0 ? 'empty' : 'ready')}));
+  drawRows(); $('upGo').disabled = !picked.some(p => p.state === 'ready');
+});
+function drawRows(){
+  $('upRows').innerHTML = picked.map((p, i) => `
+    <div class="filerow" data-i="${i}">
+      <label class="fld">제목<input data-t="${i}" value="${esc(p.title)}" maxlength="200" ${p.state === 'ready' ? '' : 'disabled'}></label>
+      <div class="st ${p.state === 'big' || p.state === 'empty' || p.state === 'fail' ? 'err' : ''} ${p.state === 'done' ? 'done' : ''}">${esc(p.file.name)} · ${fmtSize(p.file.size)}${
+        p.state === 'big' ? ' · 25MB를 넘어 올릴 수 없습니다' : p.state === 'empty' ? ' · 빈 파일입니다' : p.state === 'done' ? ' · 올렸습니다' : p.state === 'fail' ? ' · 실패: ' + esc(p.err || '') : ''}</div>
+      <div class="bar" ${p.state === 'ready' ? 'hidden' : ''}><i id="bar${i}" style="width:${p.state === 'done' ? 100 : 0}%"></i></div>
+    </div>`).join('');
+}
+$('upRows').addEventListener('input', e => { const i = e.target.dataset.t; if(i !== undefined) picked[i].title = e.target.value; });
+
+function guessMime(f){
+  if(f.type) return f.type;
+  const ext = (f.name.split('.').pop() || '').toLowerCase();
+  return ({pdf:'application/pdf', xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', xls:'application/vnd.ms-excel',
+    docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document', hwp:'application/x-hwp', hwpx:'application/x-hwpx',
+    pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation', png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', txt:'text/plain'})[ext] || 'application/octet-stream';
+}
+function bytesToB64(u8){ let s = ''; for(let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+
+async function uploadOne(p, i, category){
+  const f = p.file; const id = crypto.randomUUID(); const n = Math.max(1, Math.ceil(f.size / CHUNK_BYTES));
+  for(let s = 0; s < n; s++){
+    const u8 = new Uint8Array(await f.slice(s * CHUNK_BYTES, (s + 1) * CHUNK_BYTES).arrayBuffer());
+    await post('doc_chunks', [{doc_id: id, seq: s, data: bytesToB64(u8)}]);
+    const bar = $('bar' + i); if(bar) bar.style.width = Math.round(((s + 1) / n) * 100) + '%';
+  }
+  // 모든 조각이 올라간 뒤에 목록 항목을 만든다 → 중간에 끊겨도 반쪽짜리 서류가 목록에 뜨지 않는다
+  await post('docs', [{id, title: p.title.trim() || f.name, category, note: '', file_name: f.name.slice(0, 255), mime: guessMime(f), size: f.size, chunks: n}]);
+}
+$('upGo').addEventListener('click', async () => {
+  const category = $('upCat').value.trim() || '기타';
+  $('upGo').disabled = true; $('upFiles').disabled = true; $('upMsg').textContent = '올리는 중… 이 화면을 닫지 마세요.';
+  let ok = 0, fail = 0;
+  for(let i = 0; i < picked.length; i++){
+    const p = picked[i]; if(p.state !== 'ready') continue;
+    p.state = 'busy'; drawRows();
+    try{ await uploadOne(p, i, category); p.state = 'done'; ok++; }
+    catch(e){ p.state = 'fail'; p.err = (e.status === 401 || e.status === 403) ? '팀 코드 확인' : '연결/용량 확인'; fail++; }
+    drawRows();
+  }
+  $('upFiles').disabled = false; $('upFiles').value = '';
+  $('upMsg').textContent = `${ok}건 올렸습니다.` + (fail ? ` ${fail}건 실패 — 다시 선택해 올려 주세요.` : '');
+  await load();
+});
+
+/* ---------- 팀 코드 ---------- */
+function showGate(msg){ $('gate').hidden = false; $('gateMsg').textContent = msg || ''; setTimeout(() => $('gateInput').focus(), 50); }
+$('gateForm').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('gateInput').value.trim();
+  if(!/^[\x21-\x7e]{4,64}$/.test(v)){ $('gateMsg').textContent = '영문·숫자·기호 4자 이상으로 입력하세요.'; return; }
+  store.set('dutylog.team', v); $('gateMsg').textContent = '확인 중…'; load();
+});
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && configured() && teamCode()) load(); });
+
+render(); load();
+})();
+</script>
+</body>
+</html>
