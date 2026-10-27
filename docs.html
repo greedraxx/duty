@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex, nofollow">
-<title>시설팀 서류</title>
+<title>시설팀 문서</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
 <script src="config.js"></script>
@@ -113,16 +113,16 @@ table.xl a{color:inherit;font-weight:700}
   <a href="index.html">당직일지</a>
   <a href="schedule.html">근무표</a>
   <a href="journal.html">업무일지</a>
-  <a href="docs.html" aria-current="page">서류</a>
+  <a href="docs.html" aria-current="page">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
 </div></nav>
 
 <header class="head gut"><div class="wrap">
   <div class="titlebar">
-    <h1>시설팀 서류</h1>
-    <button type="button" class="btn primary" id="uploadBtn">서류 올리기</button>
+    <h1>시설팀 문서</h1>
+    <button type="button" class="btn primary" id="uploadBtn">문서 올리기</button>
   </div>
-  <label class="search"><input id="q" type="search" placeholder="제목·분류·메모·파일명 검색" autocomplete="off" aria-label="서류 검색"></label>
+  <label class="search"><input id="q" type="search" placeholder="제목·분류·메모·파일명 검색" autocomplete="off" aria-label="문서 검색"></label>
   <div class="chips" id="chips"></div>
 </div></header>
 
@@ -130,7 +130,7 @@ table.xl a{color:inherit;font-weight:700}
   <div id="msgs"></div>
 
   <section class="panel" id="uploadPanel" hidden>
-    <h2>서류 올리기</h2>
+    <h2>문서 올리기</h2>
     <label class="fld">분류 (목록에서 고르거나 새로 입력)
       <input id="upCat" list="catList" placeholder="예: 소방" maxlength="40" autocomplete="off">
     </label>
@@ -147,7 +147,7 @@ table.xl a{color:inherit;font-weight:700}
   </section>
 
   <section class="panel" id="editPanel" hidden>
-    <h2>서류 정보 수정</h2>
+    <h2>문서 정보 수정</h2>
     <label class="fld">제목<input id="edTitle" maxlength="200"></label>
     <label class="fld">분류<input id="edCat" list="catList" maxlength="40" autocomplete="off"></label>
     <label class="fld">메모<textarea id="edNote" maxlength="2000"></textarea></label>
@@ -163,14 +163,14 @@ table.xl a{color:inherit;font-weight:700}
   <button type="button" class="toggle" id="showHidden" hidden></button>
 </div></main>
 
-<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="서류 보기">
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="문서 보기">
   <div class="vbar"><div class="vt" id="vTitle"></div><button type="button" class="btn small" id="vSave">내려받기</button><button type="button" class="btn small" id="vClose">닫기</button></div>
   <div class="vtabs" id="vTabs" hidden></div>
   <div class="vbody" id="vBody"></div>
 </div>
 <div class="gate" id="gate" hidden>
   <form class="gatebox" id="gateForm">
-    <h2>시설팀 서류</h2>
+    <h2>시설팀 문서</h2>
     <p>팀 코드를 입력하세요. 이 기기에 기억되어 다음부터는 묻지 않습니다.</p>
     <input id="gateInput" type="password" autocomplete="off" aria-label="팀 코드" required>
     <button type="submit" class="btn primary">확인</button>
@@ -232,7 +232,7 @@ function cats(){
 function render(){
   const msgs = [];
   if(!configured()) msgs.push('<div class="banner bad">config.js에 Supabase 주소와 키가 없습니다.</div>');
-  else if(!loaded) msgs.push('<div class="banner bad">서버에 연결되지 않았습니다. 서류는 인터넷 연결이 있어야 볼 수 있습니다.</div>');
+  else if(!loaded) msgs.push('<div class="banner bad">서버에 연결되지 않았습니다. 문서는 인터넷 연결이 있어야 볼 수 있습니다.</div>');
   $('msgs').innerHTML = msgs.join('');
 
   const present = [...new Set(docs.filter(d => showHidden || !d.hidden).map(d => d.category))];
@@ -256,10 +256,10 @@ function render(){
         <button type="button" class="btn small" data-a="edit">수정</button>
         <button type="button" class="btn small" data-a="hide">${d.hidden ? '복원' : '숨김'}</button>
       </div>
-    </div>`).join('') : (loaded ? `<div class="empty">${q || activeCat ? '검색 결과가 없습니다.' : '올린 서류가 없습니다. 위의 “서류 올리기”로 시작하세요.'}</div>` : '');
+    </div>`).join('') : (loaded ? `<div class="empty">${q || activeCat ? '검색 결과가 없습니다.' : '올린 문서가 없습니다. 위의 “문서 올리기”로 시작하세요.'}</div>` : '');
   const hiddenN = docs.filter(d => d.hidden).length;
   $('showHidden').hidden = !hiddenN;
-  $('showHidden').textContent = showHidden ? '숨긴 서류 감추기' : `숨긴 서류 ${hiddenN}건 보기`;
+  $('showHidden').textContent = showHidden ? '숨긴 문서 감추기' : `숨긴 문서 ${hiddenN}건 보기`;
 }
 
 $('q').addEventListener('input', render);
@@ -291,7 +291,7 @@ function kindOf(d){
   if(m === 'text/plain' || e === 'txt' || e === 'csv') return 'text';
   return 'other';   // hwp, xls, pptx 등: 내려받기만
 }
-/* 한 번 열어 본 서류는 기기에 보관 → 다음부터 즉시 열림 (서류는 수정되지 않고 id 고정) */
+/* 한 번 열어 본 문서는 기기에 보관 → 다음부터 즉시 열림 (문서는 수정되지 않고 id 고정) */
 async function getBlob(d){
   const key = '/doc/' + d.id;
   try{ if(window.caches){ const c = await caches.open('facility-docs-v1'); const hit = await c.match(key); if(hit){ const b = await hit.blob(); if(b.size === d.size) return b; } } }catch(e){}
@@ -358,8 +358,8 @@ async function openDoc(d, forceSave, btn){
     else if(kind === 'docx') await showDocx(blob);
   }catch(e){
     if(tab) tab.close();
-    if(!$('viewer').hidden) $('vBody').innerHTML = '<div class="vmsg">이 서류는 화면에서 열 수 없습니다. 위의 “내려받기”를 누르세요.<br><small></small></div>';
-    else alert('서류를 불러오지 못했습니다.\n' + (e.message || '').slice(0, 120));
+    if(!$('viewer').hidden) $('vBody').innerHTML = '<div class="vmsg">이 문서는 화면에서 열 수 없습니다. 위의 “내려받기”를 누르세요.<br><small></small></div>';
+    else alert('문서를 불러오지 못했습니다.\n' + (e.message || '').slice(0, 120));
   }finally{ btn.disabled = false; btn.textContent = label; }
 }
 
@@ -423,7 +423,7 @@ async function uploadOne(p, i, category){
     await post('doc_chunks', [{doc_id: id, seq: s, data: bytesToB64(u8)}]);
     const bar = $('bar' + i); if(bar) bar.style.width = Math.round(((s + 1) / n) * 100) + '%';
   }
-  // 모든 조각이 올라간 뒤에 목록 항목을 만든다 → 중간에 끊겨도 반쪽짜리 서류가 목록에 뜨지 않는다
+  // 모든 조각이 올라간 뒤에 목록 항목을 만든다 → 중간에 끊겨도 반쪽짜리 문서가 목록에 뜨지 않는다
   await post('docs', [{id, title: p.title.trim() || f.name, category, note: '', file_name: f.name.slice(0, 255), mime: guessMime(f), size: f.size, chunks: n}]);
 }
 $('upGo').addEventListener('click', async () => {

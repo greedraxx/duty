@@ -1,4 +1,4 @@
--- 서류 보관 — supabase.sql 을 먼저 실행한 뒤, 이 파일을 SQL Editor 에서 Run
+-- 문서 보관 — supabase.sql 을 먼저 실행한 뒤, 이 파일을 SQL Editor 에서 Run
 -- 파일은 Storage 가 아니라 DB(doc_chunks)에 조각으로 저장됩니다.
 -- 일지·근무표와 같은 팀 코드(team_check)로 보호되고, 삭제는 불가능합니다(숨김만 가능).
 
