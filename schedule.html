@@ -762,6 +762,62 @@
             cursor: pointer;
         }
 
+
+        /* ===== 모바일 최적화 (7열 달력 유지 + 탭으로 교대) ===== */
+        .mobile-hint, .swap-bar, .holiday-list { display: none; }
+        .swap-mark { }
+        .shift-item.sel { outline: 3px solid #0d6efd; outline-offset: 1px; z-index: 6; }
+        .shift-item.sel .worker-name { text-decoration: underline; }
+        @media (max-width: 768px) {
+            .appnav { padding: 8px 10px 0; }
+            .app-container { padding: 8px; }
+            .header { padding: 12px; margin-bottom: 8px; align-items: stretch; gap: 8px; }
+            .header-buttons { flex-wrap: wrap; gap: 6px; }
+            .header-btn { padding: 7px 10px; font-size: 12px; }
+            .header-btn svg { display: none; }
+            .header-btn#themeToggle svg { display: block; }
+            .nav-section { padding: 10px 12px; margin-bottom: 8px; gap: 8px; align-items: center; }
+            .month-nav { gap: 14px; }
+            .month-nav button { width: 38px; height: 38px; }
+            .month-display { font-size: 18px; min-width: 110px; }
+            .legend { gap: 12px; flex-wrap: wrap; justify-content: center; }
+            .legend-item:nth-child(4) { border-left: 0 !important; padding-left: 0 !important; margin-left: 0 !important; display: none; }
+            .mobile-hint { display: block; font-size: 12px; color: var(--text-secondary); text-align: center; }
+            .calendar-container { padding: 8px 4px; margin-bottom: 8px; }
+            .weekday-header { display: grid; gap: 2px; padding-bottom: 6px; margin-bottom: 4px; }
+            .weekday { font-size: 12px; }
+            .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+            .day-cell { padding: 2px; min-height: 0; border-radius: 4px; }
+            .day-cell.empty { padding: 0; }
+            .day-cell.today { border-width: 2px; box-shadow: none; }
+            .day-header { margin-bottom: 2px; padding-bottom: 1px; justify-content: center; }
+            .day-number { font-size: 12px; }
+            .holiday-badge { display: none; }
+            .shift-list { gap: 2px; }
+            .shift-item { padding: 5px 1px; gap: 0; justify-content: center; font-size: 11px; border-radius: 3px; min-height: 26px; }
+            .shift-item.changed { transform: none; border-width: 2px; box-shadow: none; }
+            .shift-item.sel { transform: none; }
+            .shift-badge { display: none; }
+            .worker-name { flex: 0 1 auto; text-align: center; overflow: hidden; white-space: nowrap; max-width: 100%; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+            .worker-name.changed { text-decoration: none; }
+            .swap-mark { display: none; }
+            .holiday-list { display: block; font-size: 12px; color: var(--text-secondary); padding: 8px 6px 2px; line-height: 1.7; }
+            .stats-container { padding: 14px 12px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+            .worker-card { padding: 14px; }
+            .modal-content { padding: 18px; width: 94%; max-height: 90vh; overflow-y: auto; }
+            .setting-show-row { flex-wrap: wrap; }
+            .setting-label { width: 100%; }
+            .setting-input { font-size: 16px; min-width: 0; }
+            .toast { left: 12px; right: 12px; bottom: 76px; padding: 12px 14px; text-align: center; }
+            .swap-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; display: none; align-items: center; gap: 10px;
+                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--text-primary); color: var(--bg-primary); font-size: 13px; font-weight: 600; }
+            .swap-bar.on { display: flex; }
+            .swap-bar span { flex: 1; }
+            .swap-bar button { border: 1px solid var(--bg-primary); background: transparent; color: var(--bg-primary); border-radius: 6px; padding: 8px 14px; font-weight: 700; font-size: 14px; }
+            body.has-swap .app-container { padding-bottom: 70px; }
+        }
+
         .btn-cancel {
             background: var(--bg-tertiary);
             color: var(--text-primary);
@@ -856,6 +912,7 @@
                 <div class="month-display" id="monthDisplay"></div>
                 <button onclick="changeMonth(1)">▶</button>
             </div>
+            <div class="mobile-hint" id="mobileHint">이름을 누르고, 바꿀 칸의 이름을 누르면 교대됩니다. 테두리 굵은 칸은 교대된 근무.</div>
             <div class="legend">
                 <div class="legend-item">
                     <div class="legend-color" style="background: var(--shift-day);"></div>
@@ -888,6 +945,7 @@
                 <div class="weekday saturday">토</div>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="holiday-list" id="holidayList"></div>
         </div>
 
         <div class="stats-container">
@@ -896,6 +954,7 @@
         </div>
     </div>
 
+    <div class="swap-bar" id="swapBar"><span id="swapText"></span><button type="button" id="swapCancel">취소</button></div>
     <div class="toast" id="toast"></div>
 
     <!-- 설정 모달 -->
@@ -1284,7 +1343,8 @@
             if (isChanged) {
                 item.classList.add('changed'); // 테두리 강조 클래스 추가
                 name.classList.add('changed');
-                name.textContent = `${workerName} 🔄`;
+                name.textContent = workerName;
+                const mark = document.createElement('span'); mark.className = 'swap-mark'; mark.textContent = ' 🔄'; name.appendChild(mark);
                 name.title = `원래: ${originalWorker}`;
             } else {
                 name.textContent = workerName;
@@ -2012,6 +2072,43 @@
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
         window.addEventListener('online', syncNow);
 
+
+        // ---- 모바일: 탭으로 교대 (터치 기기에서는 끌어놓기가 안 되므로) ----
+        const tapMode = () => window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+        let sel = null; // {day, pos, name}
+        function applySel() {
+            document.querySelectorAll('.shift-item.sel').forEach(el => el.classList.remove('sel'));
+            const bar = document.getElementById('swapBar');
+            if (sel) {
+                const it = document.querySelector(`.shift-item[data-day="${sel.day}"][data-position="${sel.pos}"]`);
+                if (it) it.classList.add('sel');
+                document.getElementById('swapText').textContent = `${sel.name} ${sel.day}일 선택 · 바꿀 칸을 누르세요`;
+            }
+            bar.classList.toggle('on', !!sel);
+            document.body.classList.toggle('has-swap', !!sel);
+        }
+        const _renderCalendar = renderCalendar;
+        renderCalendar = function () {
+            _renderCalendar();
+            if (sel) { const k = `${currentYear}-${currentMonth}`; const a = workerAssignments[k] && workerAssignments[k][sel.day]; if (!a || a[sel.pos] !== sel.name) sel = null; }
+            applySel();
+            const hl = []; const dim = getDaysInMonth(currentYear, currentMonth);
+            for (let d = 1; d <= dim; d++) { const h = getHoliday(currentYear, currentMonth, d); if (h) hl.push(`${d}일 ${h}`); }
+            document.getElementById('holidayList').textContent = hl.length ? '공휴일: ' + hl.join(' · ') : '';
+        };
+        document.getElementById('calendarGrid').addEventListener('click', e => {
+            if (!tapMode()) return;
+            const item = e.target.closest('.shift-item'); if (!item) return;
+            const day = parseInt(item.dataset.day), pos = parseInt(item.dataset.position);
+            const k = `${currentYear}-${currentMonth}`; const name = workerAssignments[k][day][pos];
+            if (!sel) { if (!canEdit()) return; sel = {day, pos, name}; applySel(); return; }
+            if (sel.day === day && sel.pos === pos) { sel = null; applySel(); return; }
+            draggedWorker = sel.name; draggedDay = sel.day; draggedPosition = sel.pos;
+            sel = null;
+            handleDrop({preventDefault() {}, stopPropagation() {}, currentTarget: item}); // 기존 교대 로직(저장·토스트·다시 그리기) 그대로 사용
+            applySel();
+        });
+        document.getElementById('swapCancel').addEventListener('click', () => { sel = null; applySel(); });
         initTheme();
         updateViewModeUI(false); // 초기 UI 설정
         renderCalendar();
