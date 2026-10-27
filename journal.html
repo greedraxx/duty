@@ -35,6 +35,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
 .appnav a[href="index.html"]{color:#D4A000}
 .appnav a[href="schedule.html"]{color:#1B8A3A}
+.appnav a[href="journal.html"]{color:var(--ink)}
+.appnav a[href="docs.html"]{color:var(--muted)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .appnav a[href="index.html"]{color:#FFD54A}:root:not([data-theme="light"]) .appnav a[href="schedule.html"]{color:#6FD38A}}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0;text-align:right;line-height:1.2}
 
@@ -99,9 +101,9 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
 </head>
 <body>
 <nav class="appnav gut"><div class="wrap navrow">
+  <a href="journal.html" aria-current="page">업무일지</a>
   <a href="index.html">당직일지</a>
   <a href="schedule.html">근무표</a>
-  <a href="journal.html" aria-current="page">업무일지</a>
   <a href="docs.html">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
 </div></nav>

@@ -14,6 +14,8 @@
         .appnav a[aria-current="page"]{color:var(--text-primary);border-color:var(--border-color);background:var(--bg-primary)}
         .appnav a[href="index.html"]{color:#D4A000}
         .appnav a[href="schedule.html"]{color:#1B8A3A}
+        .appnav a[href="journal.html"]{color:var(--text-primary)}
+        .appnav a[href="docs.html"]{color:var(--text-secondary)}
 [data-theme="dark"] .appnav a[href="index.html"]{color:#FFD54A}
         [data-theme="dark"] .appnav a[href="schedule.html"]{color:#6FD38A}
         .appnav .sync{margin-left:auto;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
@@ -837,9 +839,9 @@
 
 <body>
     <nav class="appnav">
+        <a href="journal.html">업무일지</a>
         <a href="index.html">당직일지</a>
         <a href="schedule.html" aria-current="page">근무표</a>
-        <a href="journal.html">업무일지</a>
         <a href="docs.html">문서</a>
         <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
     </nav>
