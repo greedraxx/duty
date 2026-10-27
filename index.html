@@ -210,6 +210,10 @@ html,body{margin:0}
 .tools{display:flex;flex-wrap:wrap;gap:10px;padding:14px}
 .tools .btn{height:42px;font-size:14px;padding:0 14px}
 .tools p{flex-basis:100%;margin:0}
+.appnav{padding-top:10px}
+.navrow{display:flex;gap:4px}
+.appnav a{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid transparent}
+.appnav a[aria-current="page"]{color:var(--ink);border-color:var(--line)}
 #printArea{display:none}
 @page{size:A4 portrait;margin:0}
 @media print{
@@ -222,6 +226,10 @@ html,body{margin:0}
 </style>
 </head>
 <body>
+<nav class="appnav gut"><div class="wrap navrow">
+  <a href="index.html" aria-current="page">당직일지</a>
+  <a href="schedule.html">근무표</a>
+</div></nav>
 
 <header class="head gut">
   <div class="wrap">

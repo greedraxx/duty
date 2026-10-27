@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시설팀 근무표</title>
+    <meta name="robots" content="noindex, nofollow">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        .appnav{display:flex;align-items:center;gap:4px;max-width:1600px;margin:0 auto;padding:12px 20px 0}
+        .appnav a{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--text-secondary);text-decoration:none;border:1px solid transparent}
+        .appnav a[aria-current="page"]{color:var(--text-primary);border-color:var(--border-color);background:var(--bg-primary)}
+        .appnav .sync{margin-left:auto;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
+        .appnav .dot{width:7px;height:7px;border-radius:50%;background:var(--text-secondary)}
+        .appnav .dot.on{background:#28a745}.appnav .dot.busy{background:#ffc107}.appnav .dot.off{background:#dc3545}
+        .gate{position:fixed;inset:0;z-index:1000;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;padding:24px}
+        .gate[hidden]{display:none}
+        .gatebox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+        .gatebox h2{margin:0;font-size:20px}
+        .gatebox p{margin:0;font-size:13px;color:var(--text-secondary)}
+        .gatebox input{height:48px;border:1px solid var(--border-color);border-radius:8px;padding:0 14px;font-size:18px;background:var(--bg-primary);color:var(--text-primary)}
+        .gatebox button{height:46px;border:0;border-radius:8px;background:var(--text-primary);color:var(--bg-primary);font-weight:700;font-size:15px;cursor:pointer}
+        @media print{.appnav,.gate{display:none!important}}
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --shift-day: #ffc107;
+            --shift-night: #28a745;
+            --shift-off: #dc3545;
+            --holiday-bg: #fff3cd;
+            --weekend-text: #dc3545;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+            /* Shift item order for work-only mode */
+            --order-day: 1;
+            --order-night: 2;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3d3d3d;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+            --shift-day: #ffca2c;
+            --shift-night: #198754;
+            --shift-off: #dc3545;
+            --holiday-bg: #664d03;
+            --weekend-text: #ff6b6b;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: transparent;
+            border: 1.5px solid var(--text-primary);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .header-btn:hover {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            transform: translateY(-1px);
+        }
+
+        .header-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* 다크모드 버튼은 아이콘만 */
+        .header-btn#themeToggle {
+            padding: 8px;
+            min-width: 36px;
+            justify-content: center;
+        }
+
+        .nav-section {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .month-nav button {
+            background: none;
+            border: 2px solid var(--text-primary);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .month-nav button:hover {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        .month-display {
+            font-size: 22px;
+            font-weight: 700;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .calendar-container {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .weekday.saturday {
+            color: #0066cc;
+        }
+
+        .weekday.sunday {
+            color: #dc3545;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day-cell {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 110px;
+            transition: all 0.2s;
+        }
+
+        .day-cell:hover {
+            border-color: var(--text-primary);
+            box-shadow: var(--shadow);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+        }
+
+        .day-cell.holiday {
+            background: var(--holiday-bg);
+        }
+
+        .day-cell.today {
+            border: 3px solid var(--text-primary);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .day-cell.today .day-header {
+            border-bottom-color: var(--text-primary);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .day-cell.saturday .day-number {
+            color: #0066cc;
+        }
+
+        .day-cell.sunday .day-number,
+        .day-cell.holiday .day-number {
+            color: #dc3545;
+        }
+
+        .holiday-badge {
+            font-size: 10px;
+            background: var(--weekend-text);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .shift-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .shift-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .shift-item.주간 {
+            background: var(--shift-day);
+            color: #000;
+        }
+
+        .shift-item.당직 {
+            background: var(--shift-night);
+            color: #fff;
+        }
+
+        .shift-item.비번 {
+            background: var(--shift-off);
+            color: #fff;
+        }
+
+        .shift-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .worker-name {
+            flex: 1;
+            cursor: move;
+            user-select: none;
+        }
+
+        .worker-name:hover {
+            text-decoration: underline;
+        }
+
+        .worker-name.dragging {
+            opacity: 0.5;
+        }
+
+        .worker-name.changed {
+            font-weight: 900;
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 교대된 근무 강조 스타일 */
+        .shift-item.changed {
+            border: 2px solid #212529;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+            transform: scale(1.02);
+            z-index: 5;
+        }
+
+        [data-theme="dark"] .shift-item.changed {
+            border: 2px solid #e9ecef;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .stats-container {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .worker-card {
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 20px;
+            border-left: 4px solid var(--text-primary);
+        }
+
+        .worker-card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .print-container {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .header,
+            .nav-section,
+            .stats-container,
+            .btn {
+                display: none !important;
+            }
+
+            .print-container {
+                display: block !important;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weekday-header {
+                display: none;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            .header,
+            .nav-section {
+                flex-direction: column;
+            }
+        }
+
+        /* PDF 출력용 스타일 */
+        .pdf-page {
+            width: 100%;
+            max-width: 190mm;
+            margin: 0 auto;
+            padding: 5mm;
+            background: white;
+            color: black;
+            box-sizing: border-box;
+        }
+
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 22px;
+            font-weight: 700;
+            padding: 10px;
+            border-bottom: 3px solid #333;
+        }
+
+        .pdf-month-container {
+            margin-bottom: 10px;
+        }
+
+        .pdf-month-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            padding: 5px;
+            background: #f0f0f0;
+            text-align: center;
+        }
+
+        .pdf-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            font-size: 9px;
+        }
+
+        .pdf-weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 2px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .pdf-weekday {
+            text-align: center;
+            padding: 3px;
+            background: #e0e0e0;
+        }
+
+        .pdf-weekday.saturday {
+            color: #0066cc;
+            font-weight: 700;
+        }
+
+        .pdf-weekday.sunday {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        .pdf-day-cell {
+            border: 1px solid #ddd;
+            padding: 3px;
+            min-height: 55px;
+            background: white;
+        }
+
+        .pdf-day-cell.holiday {
+            background: #fff9e6;
+        }
+
+        .pdf-day-number {
+            font-weight: 700;
+            margin-bottom: 2px;
+            font-size: 11px;
+        }
+
+        .pdf-day-cell.saturday .pdf-day-number {
+            color: #0066cc;
+        }
+
+        .pdf-day-cell.sunday .pdf-day-number,
+        .pdf-day-cell.holiday .pdf-day-number {
+            color: #dc3545;
+        }
+
+        .pdf-shift-item {
+            padding: 2px 3px;
+            margin-bottom: 2px;
+            border-radius: 2px;
+            font-size: 8px;
+            line-height: 1.3;
+        }
+
+        .pdf-shift-item.주간 {
+            background: #ffc107;
+        }
+
+        .pdf-shift-item.당직 {
+            background: #28a745;
+            color: white;
+        }
+
+        .pdf-shift-item.비번 {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* 근무만 보기 모드 스타일 */
+        .calendar-container.work-only-mode .shift-item.비번 {
+            display: none !important;
+        }
+
+        .calendar-container.work-only-mode .shift-item.주간 {
+            order: 1;
+        }
+
+        .calendar-container.work-only-mode .shift-item.당직 {
+            order: 2;
+        }
+
+        /* 3개월 출력용 축소 스타일 */
+        .pdf-3-month .pdf-header {
+            font-size: 16px;
+            margin-bottom: 5px;
+            padding: 5px;
+        }
+
+        .pdf-3-month .pdf-month-title {
+            font-size: 12px;
+            margin-bottom: 2px;
+            padding: 2px;
+        }
+
+        .pdf-3-month .pdf-day-cell {
+            min-height: 35px;
+            padding: 1px;
+        }
+
+        .pdf-3-month .pdf-day-number {
+            font-size: 9px;
+            margin-bottom: 0;
+        }
+
+        .pdf-3-month .pdf-shift-item {
+            font-size: 7px;
+            padding: 1px 2px;
+            margin-bottom: 1px;
+        }
+
+        .pdf-3-month .pdf-weekday-header {
+            font-size: 9px;
+            margin-bottom: 1px;
+        }
+
+        /* 근무만 보기 모드 PDF 스타일 (공간 활용 확대) */
+        .pdf-work-only .pdf-day-cell {
+            min-height: 65px;
+        }
+
+        .pdf-work-only .pdf-shift-item {
+            font-size: 11px;
+            padding: 3px 5px;
+            margin-bottom: 3px;
+        }
+
+        .pdf-work-only .pdf-day-number {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        /* 3개월 + 근무만 보기 조합 (너무 작았던 것 보완) */
+        .pdf-3-month.pdf-work-only .pdf-day-cell {
+            min-height: 45px;
+        }
+
+        .pdf-3-month.pdf-work-only .pdf-shift-item {
+            font-size: 9px;
+            padding: 2px 4px;
+            margin-bottom: 2px;
+        }
+
+        .pdf-3-month.pdf-work-only .pdf-day-number {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        /* 설정 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-show-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            font-size: 14px;
+            width: 60px;
+        }
+
+        .setting-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+</head>
+
+<body>
+    <nav class="appnav">
+        <a href="index.html">당직일지</a>
+        <a href="schedule.html" aria-current="page">근무표</a>
+        <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
+    </nav>
+    <div class="gate" id="gate" hidden>
+        <form class="gatebox" id="gateForm">
+            <h2>시설팀 근무표</h2>
+            <p>팀 코드를 입력하세요. 이 기기에 기억되어 다음부터는 묻지 않습니다.</p>
+            <input id="gateInput" type="password" autocomplete="off" aria-label="팀 코드" required>
+            <button type="submit">확인</button>
+            <p id="gateMsg" style="color:#dc3545"></p>
+        </form>
+    </div>
+    <div class="app-container">
+        <div class="header">
+            <h1>시설팀 근무표</h1>
+            <div class="header-buttons">
+                <button class="header-btn" onclick="resetSchedule()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                    </svg>
+                    초기화
+                </button>
+                <button class="header-btn" onclick="exportPDF(2)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                    </svg>
+                    PDF(2개월)
+                </button>
+                <button class="header-btn" onclick="exportPDF(3)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                    </svg>
+                    PDF(3개월)
+                </button>
+                <button class="header-btn" onclick="exportAttendanceExcel()" title="현재 연도 1~12월 근태관리 양식을 시트별로 다운로드">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="8" y1="13" x2="16" y2="13" />
+                        <line x1="8" y1="17" x2="16" y2="17" />
+                    </svg>
+                    근태관리(연간)
+                </button>
+                <button class="header-btn" onclick="openSettings()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    근무자 설정
+                </button>
+                <button class="header-btn" onclick="toggleViewMode()" id="viewToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    근무만 보기
+                </button>
+                <button class="header-btn" onclick="toggleTheme()" id="themeToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M21.64 13a1 1 0 0 0-1.05-.14 8.05 8.05 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="month-nav">
+                <button onclick="changeMonth(-1)">◀</button>
+                <div class="month-display" id="monthDisplay"></div>
+                <button onclick="changeMonth(1)">▶</button>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--shift-day);"></div>
+                    <span>주간</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--shift-night);"></div>
+                    <span>당직</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--shift-off);"></div>
+                    <span>비번</span>
+                </div>
+                <div class="legend-item"
+                    style="border-left: 2px solid var(--border-color); padding-left: 15px; margin-left: 10px;">
+                    <span style="font-weight: 900; text-decoration: underline;">이름 🔄</span>
+                    <span>= 근무 교대</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="weekday-header">
+                <div class="weekday sunday">일</div>
+                <div class="weekday">월</div>
+                <div class="weekday">화</div>
+                <div class="weekday">수</div>
+                <div class="weekday">목</div>
+                <div class="weekday">금</div>
+                <div class="weekday saturday">토</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stats-title">📊 근무자별 통계</div>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- 설정 모달 -->
+    <div class="modal-overlay" id="settingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">근무자 정보 설정</div>
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </div>
+            <div id="settingForm">
+                <!-- JS로 동적 생성 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeSettings()">취소</button>
+                <button class="btn-save" onclick="saveWorkerSettings()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const storage = (() => {
+            try {
+                const testKey = '__facility_schedule_storage_test__';
+                const browserStorage = window['local' + 'Storage'];
+                browserStorage.setItem(testKey, '1');
+                browserStorage.removeItem(testKey);
+                return browserStorage;
+            } catch (error) {
+                const memoryStorage = {};
+                return {
+                    getItem: key => Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null,
+                    setItem: (key, value) => {
+                        memoryStorage[key] = String(value);
+                    },
+                    removeItem: key => {
+                        delete memoryStorage[key];
+                    }
+                };
+            }
+        })();
+
+        // 근무자 기본값(임시 이름). 실제 이름·직급·연락처는 서버(config 'sched:workers')에서 받아 온다.
+        // 공개 저장소에 개인정보가 올라가지 않도록 코드에는 넣지 않는다.
+        const defaultWorkers = [
+            { name: '근무자A', position: '시설기사', phone: '', patternIndex: 1 },
+            { name: '근무자B', position: '시설기사', phone: '', patternIndex: 2 },
+            { name: '근무자C', position: '시설반장', phone: '', patternIndex: 0 }
+        ];
+
+        let workers = normalizeWorkers(JSON.parse(storage.getItem('workers')) || JSON.parse(JSON.stringify(defaultWorkers)));
+        storage.setItem('workers', JSON.stringify(workers));
+
+        // 이미지 기반 정확한 3교대 순환 패턴 (인덱스 기반)
+        // 패턴 번호는 근무자 설정의 patternIndex (0: 반장, 1: 기사 A, 2: 기사 B)
+        const shiftPatterns = [
+            ['주간', '당직', '비번'],  // Index 0
+            ['당직', '비번', '주간'],  // Index 1
+            ['비번', '주간', '당직']   // Index 2
+        ];
+
+        function normalizeWorkers(savedWorkers) {
+            const ok = Array.isArray(savedWorkers) && savedWorkers.length === 3 &&
+                savedWorkers.every(w => w && typeof w.name === 'string' && w.name.trim()) &&
+                new Set(savedWorkers.map(w => w.name)).size === 3;
+            if (!ok) return JSON.parse(JSON.stringify(defaultWorkers));
+            return savedWorkers.map((w, i) => ({
+                name: w.name,
+                position: w.position || '',
+                phone: w.phone || '',
+                patternIndex: Number.isInteger(w.patternIndex) ? w.patternIndex : defaultWorkers[i].patternIndex
+            }));
+        }
+
+        // 2026년 1월 1일을 기준(day 0)으로 총 일수 계산
+        function getTotalDaysFrom20260101(year, month, day) {
+            const baseDate = new Date(2026, 0, 1); // 2026년 1월 1일
+            const targetDate = new Date(year, month - 1, day);
+            const diffTime = targetDate - baseDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        // 정확한 3교대 순환 패턴 생성
+        function generateShiftPattern(year, month) {
+            const daysInMonth = getDaysInMonth(year, month);
+            const pattern = {};
+            workers.forEach(w => { pattern[w.name] = []; });
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                // 2026년 1월 1일부터의 총 일수로 순환 패턴 계산
+                const totalDays = getTotalDaysFrom20260101(year, month, day);
+                const cycleIndex = totalDays % 3;
+
+                workers.forEach((worker, index) => {
+                    const patternIndex = Number.isInteger(worker.patternIndex) ? worker.patternIndex : index;
+                    let shift = shiftPatterns[patternIndex][cycleIndex];
+
+                    // 토/일/공휴일이면 주간을 비번으로 변경
+                    if (shift === '주간' && isWeekendOrHoliday(year, month, day)) {
+                        shift = '비번';
+                    }
+
+                    pattern[worker.name].push(shift);
+                });
+            }
+
+            return pattern;
+        }
+
+        // 대한민국 법정 공휴일 (2025-2027년)
+        const holidays = {
+            // 2025년
+            '2025-1-1': '신정',
+            '2025-1-28': '설날 연휴',
+            '2025-1-29': '설날',
+            '2025-1-30': '설날 연휴',
+            '2025-3-1': '삼일절',
+            '2025-5-5': '어린이날',
+            '2025-5-6': '대체공휴일',
+            '2025-6-6': '현충일',
+            '2025-8-15': '광복절',
+            '2025-9-6': '추석 연휴',
+            '2025-9-7': '추석 연휴',
+            '2025-9-8': '추석',
+            '2025-9-9': '추석 연휴',
+            '2025-10-3': '개천절',
+            '2025-10-9': '한글날',
+            '2025-12-25': '크리스마스',
+            // 2026년
+            '2026-1-1': '신정',
+            '2026-2-16': '설날 연휴',
+            '2026-2-17': '설날',
+            '2026-2-18': '설날 연휴',
+            '2026-3-1': '삼일절',
+            '2026-3-2': '대체공휴일',
+            '2026-5-1': '노동절',
+            '2026-5-5': '어린이날',
+            '2026-5-24': '부처님오신날',
+            '2026-5-25': '대체공휴일',
+            '2026-6-3': '지방선거일',
+            '2026-6-6': '현충일',
+            '2026-7-17': '제헌절',
+            '2026-8-15': '광복절',
+            '2026-8-17': '대체공휴일',
+            '2026-9-24': '추석 연휴',
+            '2026-9-25': '추석',
+            '2026-9-26': '추석 연휴',
+            '2026-10-3': '개천절',
+            '2026-10-5': '대체공휴일',
+            '2026-10-9': '한글날',
+            '2026-12-25': '크리스마스',
+            // 2027년 (우주항공청 2027년 월력요항 / 한국천문연구원 달력자료 기준)
+            '2027-1-1': '신정',
+            '2027-2-6': '설날 연휴',
+            '2027-2-7': '설날',
+            '2027-2-8': '설날 연휴',
+            '2027-2-9': '대체공휴일',
+            '2027-3-1': '삼일절',
+            '2027-5-1': '노동절',
+            '2027-5-3': '대체공휴일',
+            '2027-5-5': '어린이날',
+            '2027-5-13': '부처님오신날',
+            '2027-6-6': '현충일',
+            '2027-7-17': '제헌절',
+            '2027-7-19': '대체공휴일',
+            '2027-8-15': '광복절',
+            '2027-8-16': '대체공휴일',
+            '2027-9-14': '추석 연휴',
+            '2027-9-15': '추석',
+            '2027-9-16': '추석 연휴',
+            '2027-10-3': '개천절',
+            '2027-10-4': '대체공휴일',
+            '2027-10-9': '한글날',
+            '2027-10-11': '대체공휴일',
+            '2027-12-25': '크리스마스',
+            '2027-12-27': '대체공휴일'
+        };
+
+        const todayDate = new Date();
+        let currentYear = todayDate.getFullYear();
+        let currentMonth = todayDate.getMonth() + 1;
+        let scheduleData = {}; // 근무자별 스케줄
+
+        // 로컬 스토리지에서 저장된 근무표 불러오기
+        let workerAssignments = {};
+        try {
+            const saved = storage.getItem('workerAssignments');
+            if (saved) {
+                workerAssignments = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('데이터 로드 실패', e);
+            workerAssignments = {};
+        }
+
+        let daySchedules = {}; // 날짜별 고정 근무 스케줄 (주간/당직/비번)
+        let originalAssignments = {}; // 초기 할당 상태 (변경 감지용)
+
+        // 주말/공휴일 체크
+        function isWeekendOrHoliday(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            const weekday = date.getDay();
+            const dateStr = `${year}-${month}-${day}`;
+            return weekday === 0 || weekday === 6 || holidays[dateStr];
+        }
+
+        // 저장된 하루 배정이 현재 근무자 이름으로만 이루어졌는지 확인.
+        // 근무 교대로 한 사람이 같은 날 두 칸에 들어갈 수 있으므로 중복은 허용한다.
+        function validAssign(a) {
+            if (!Array.isArray(a) || a.length !== workers.length) return false;
+            const names = workers.map(w => w.name);
+            return a.every(n => names.includes(n));
+        }
+
+        // 스케줄 데이터 초기화
+        function initScheduleData() {
+            const key = `${currentYear}-${currentMonth}`;
+            if (!scheduleData[key]) {
+                scheduleData[key] = {};
+                // 원본은 여기서 저장된 교대를 {} 로 덮어써서 새로고침하면 교대가 사라졌다.
+                if (!workerAssignments[key] || typeof workerAssignments[key] !== 'object') workerAssignments[key] = {};
+                daySchedules[key] = {}; // 날짜별 고정 스케줄
+                originalAssignments[key] = {}; // 초기 할당 상태
+
+                const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+
+                // 정확한 3교대 순환 패턴 생성 (토/일/공휴일 규칙 자동 적용)
+                const pattern = generateShiftPattern(currentYear, currentMonth);
+
+                workers.forEach(worker => {
+                    scheduleData[key][worker.name] = [...pattern[worker.name]];
+                });
+
+                // 근무자 할당 및 날짜별 고정 스케줄 초기화
+                for (let day = 1; day <= daysInMonth; day++) {
+                    // 저장된 데이터가 없으면 초기 데이터로 설정
+                    if (!workerAssignments[key]) {
+                        workerAssignments[key] = {};
+                    }
+                    if (!validAssign(workerAssignments[key][day])) {
+                        workerAssignments[key][day] = [...workers.map(w => w.name)];
+                    }
+
+                    originalAssignments[key][day] = [...workers.map(w => w.name)]; // 초기 상태 저장
+
+                    // 날짜별 고정 스케줄 저장 (위치별 근무 타입)
+                    daySchedules[key][day] = workers.map(worker =>
+                        scheduleData[key][worker.name][day - 1]
+                    );
+                }
+            }
+        }
+
+        // 데이터 저장
+        function saveData(all) {
+            storage.setItem('workerAssignments', JSON.stringify(workerAssignments));
+            const keys = all ? Object.keys(workerAssignments) : [`${currentYear}-${currentMonth}`];
+            keys.forEach(k => pendingMonths.add(k));
+            savePending();
+            flushRemote();
+        }
+
+        // 현재 월의 일수
+        function getDaysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        // 월의 첫날 요일
+        function getFirstDayOfMonth(year, month) {
+            return new Date(year, month - 1, 1).getDay();
+        }
+
+        // 공휴일 확인
+        function getHoliday(year, month, day) {
+            const dateStr = `${year}-${month}-${day}`;
+            return holidays[dateStr];
+        }
+
+        // 캘린더 렌더링
+        function renderCalendar() {
+            initScheduleData();
+
+            document.getElementById('monthDisplay').textContent = `${currentYear}년 ${currentMonth}월`;
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+            const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
+
+            // 빈 셀
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'day-cell empty';
+                grid.appendChild(empty);
+            }
+
+            // 날짜 셀
+            for (let day = 1; day <= daysInMonth; day++) {
+                grid.appendChild(createDayCell(day));
+            }
+
+            renderStats();
+        }
+
+        // 날짜 셀 생성
+        function createDayCell(day) {
+            const cell = document.createElement('div');
+            const date = new Date(currentYear, currentMonth - 1, day);
+            const weekday = date.getDay();
+            const holiday = getHoliday(currentYear, currentMonth, day);
+
+            cell.className = 'day-cell';
+            if (weekday === 0) cell.classList.add('sunday');
+            if (weekday === 6) cell.classList.add('saturday');
+            if (holiday) cell.classList.add('holiday');
+
+            // 오늘 날짜 체크
+            const today = new Date();
+            if (currentYear === today.getFullYear() &&
+                currentMonth === (today.getMonth() + 1) &&
+                day === today.getDate()) {
+                cell.classList.add('today');
+            }
+
+            // 헤더
+            const header = document.createElement('div');
+            header.className = 'day-header';
+
+            const dayNum = document.createElement('div');
+            dayNum.className = 'day-number';
+            dayNum.textContent = day;
+            header.appendChild(dayNum);
+
+            if (holiday) {
+                const badge = document.createElement('div');
+                badge.className = 'holiday-badge';
+                badge.textContent = holiday;
+                header.appendChild(badge);
+            }
+
+            cell.appendChild(header);
+
+            // 근무 목록
+            const shiftList = document.createElement('div');
+            shiftList.className = 'shift-list';
+
+            const key = `${currentYear}-${currentMonth}`;
+            const assignments = workerAssignments[key][day];
+            const schedules = daySchedules[key][day];
+
+            assignments.forEach((workerName, idx) => {
+                const shiftType = schedules[idx]; // 고정된 근무 타입
+                const item = createShiftItem(workerName, shiftType, day, idx);
+                shiftList.appendChild(item);
+            });
+
+            cell.appendChild(shiftList);
+            return cell;
+        }
+
+        // 근무 아이템 생성
+        function createShiftItem(workerName, shiftType, day, position) {
+            const item = document.createElement('div');
+            item.className = `shift-item ${shiftType}`;
+            item.dataset.day = day;
+            item.dataset.position = position;
+
+            // 드롭 이벤트는 shift-item에서 받음
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('drop', handleDrop);
+            item.addEventListener('dragleave', handleDragLeave);
+
+            const badge = document.createElement('span');
+            badge.className = 'shift-badge';
+            badge.textContent = shiftType;
+
+            const name = document.createElement('span');
+            name.className = 'worker-name';
+
+            // 초기 할당과 다른지 확인
+            const key = `${currentYear}-${currentMonth}`;
+            const originalWorker = originalAssignments[key][day][position];
+            const isChanged = workerName !== originalWorker;
+
+            if (isChanged) {
+                item.classList.add('changed'); // 테두리 강조 클래스 추가
+                name.classList.add('changed');
+                name.textContent = `${workerName} 🔄`;
+                name.title = `원래: ${originalWorker}`;
+            } else {
+                name.textContent = workerName;
+            }
+
+            name.draggable = true;
+            name.dataset.worker = workerName;
+            name.dataset.day = day;
+            name.dataset.position = position;
+
+            // 드래그 시작/끝은 worker-name에서
+            name.addEventListener('dragstart', handleDragStart);
+            name.addEventListener('dragend', handleDragEnd);
+
+            item.appendChild(badge);
+            item.appendChild(name);
+
+            return item;
+        }
+
+        // 드래그 이벤트
+        let draggedWorker = null;
+        let draggedDay = null;
+        let draggedPosition = null;
+
+        function handleDragStart(e) {
+            draggedWorker = e.target.dataset.worker;
+            draggedDay = parseInt(e.target.dataset.day);
+            draggedPosition = parseInt(e.target.dataset.position);
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            // shift-item에 하이라이트
+            const shiftItem = e.currentTarget;
+            if (!shiftItem.classList.contains('dragging')) {
+                shiftItem.style.opacity = '0.7';
+                shiftItem.style.transform = 'scale(1.05)';
+                shiftItem.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+            }
+
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const shiftItem = e.currentTarget;
+            shiftItem.style.opacity = '';
+            shiftItem.style.transform = '';
+            shiftItem.style.boxShadow = '';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const shiftItem = e.currentTarget;
+            shiftItem.style.opacity = '';
+            shiftItem.style.transform = '';
+            shiftItem.style.boxShadow = '';
+
+            if (!draggedWorker) return false;
+            if (!canEdit()) return false;
+
+            const targetDay = parseInt(shiftItem.dataset.day);
+            const targetPosition = parseInt(shiftItem.dataset.position);
+
+            // 같은 위치면 무시
+            if (draggedDay === targetDay && draggedPosition === targetPosition) {
+                return false;
+            }
+
+            // 근무자 이름만 교환 (근무 스케줄은 그대로 유지)
+            const key = `${currentYear}-${currentMonth}`;
+            const targetWorker = workerAssignments[key][targetDay][targetPosition];
+
+            // 이름만 교환
+            workerAssignments[key][draggedDay][draggedPosition] = targetWorker;
+            workerAssignments[key][targetDay][targetPosition] = draggedWorker;
+
+            saveData(); // 변경사항 저장
+
+            showToast(`✅ ${draggedWorker}(${draggedDay}일) ↔ ${targetWorker}(${targetDay}일) 이름 교환 완료`);
+            renderCalendar();
+
+            return false;
+        }
+
+        // 통계 렌더링
+        function renderStats() {
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = '';
+
+            const key = `${currentYear}-${currentMonth}`;
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+
+            workers.forEach(worker => {
+                // 각 근무자가 실제로 배치된 날짜의 근무 타입 계산
+                const stats = { 주간: 0, 당직: 0, 비번: 0 };
+                let holidayWorkCount = 0;
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const assignments = workerAssignments[key][day];
+                    const schedules = daySchedules[key][day];
+
+                    const position = assignments.indexOf(worker.name);
+                    if (position !== -1) {
+                        const shiftType = schedules[position];
+                        stats[shiftType]++;
+
+                        // 공휴일 근무 체크 (주간/당직인 경우만, 일요일 제외)
+                        if (shiftType !== '비번') {
+                            const isHoliday = getHoliday(currentYear, currentMonth, day);
+
+                            if (isHoliday) {
+                                holidayWorkCount++;
+                            }
+                        }
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = 'worker-card';
+                card.innerHTML = `
+                    <h3>${worker.name} (${worker.position})</h3>
+                    <div class="stat-row">
+                        <span>주간</span>
+                        <span class="stat-value">${stats.주간}일</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>당직</span>
+                        <span class="stat-value">${stats.당직}일</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>비번</span>
+                        <span class="stat-value">${stats.비번}일</span>
+                    </div>
+                    <div class="stat-row" style="color: #dc3545;">
+                        <span>공휴일 근무</span>
+                        <span class="stat-value">${holidayWorkCount}일</span>
+                    </div>
+                    <div class="stat-row" style="border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
+                        <span>총 근무일</span>
+                        <span class="stat-value">${stats.주간 + stats.당직}일</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 월 변경
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            if (currentYear < 2025 || currentYear > 2027) showToast('⚠️ 공휴일 정보가 2025~2027년만 있어 이 해는 주말만 반영됩니다');
+            renderCalendar();
+        }
+
+        // 근무표 초기화
+        function resetSchedule() {
+            if (!canEdit()) return;
+            if (!confirm('모든 근무 교대를 초기 상태로 되돌리시겠습니까?')) {
+                return;
+            }
+
+            const key = `${currentYear}-${currentMonth}`;
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+
+            // 초기 상태로 복원
+            for (let day = 1; day <= daysInMonth; day++) {
+                workerAssignments[key][day] = [...originalAssignments[key][day]];
+            }
+
+            saveData(); // 초기화 상태 저장
+
+            showToast('✅ 근무표가 초기 상태로 초기화되었습니다');
+            renderCalendar();
+        }
+
+        // 근무 보기 모드 토글 (기본값: 근무만 보기)
+        let isWorkOnlyMode = true;
+
+        function toggleViewMode() {
+            isWorkOnlyMode = !isWorkOnlyMode;
+            updateViewModeUI(true);
+        }
+
+        function updateViewModeUI(withToast = true) {
+            const container = document.querySelector('.calendar-container');
+            const btn = document.getElementById('viewToggle');
+
+            if (isWorkOnlyMode) {
+                container.classList.add('work-only-mode');
+                btn.style.background = 'var(--text-primary)';
+                btn.style.color = 'var(--bg-primary)';
+                btn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                    전체 보기
+                `;
+                if (withToast) showToast('근무(주간, 당직)만 표시합니다');
+            } else {
+                container.classList.remove('work-only-mode');
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    근무만 보기
+                `;
+                if (withToast) showToast('모든 근무 형태를 표시합니다');
+            }
+        }
+
+        // 다크모드 토글
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+
+            const toggle = document.getElementById('themeToggle');
+            if (newTheme === 'dark') {
+                // 다크모드 = 해 아이콘
+                toggle.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>`;
+            } else {
+                // 라이트모드 = 달 아이콘
+                toggle.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21.64 13a1 1 0 0 0-1.05-.14 8.05 8.05 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05z"/>
+                </svg>`;
+            }
+
+            storage.setItem('theme', newTheme);
+        }
+
+        // 테마 초기화
+        function initTheme() {
+            const savedTheme = storage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const toggle = document.getElementById('themeToggle');
+            if (savedTheme === 'dark') {
+                toggle.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>`;
+            } else {
+                toggle.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21.64 13a1 1 0 0 0-1.05-.14 8.05 8.05 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05z"/>
+                </svg>`;
+            }
+        }
+
+        // PDF 출력 (months: 개월 수)
+        // ===== 근태관리 엑셀 (연간, 월별 시트) 다운로드 =====
+        // 현재 보고 있는 연도(currentYear) 기준 1~12월을 각각 시트로 생성한다.
+        // 각 시트는 원본 양식을 템플릿으로 사용하며, 캘린더의 실제 근무 스케줄
+        // (워커별 배치 포함)과 날짜/요일 색상 규칙을 그대로 반영한다.
+        //  - 날짜 숫자행: 토/일/공휴일 = 빨강
+        //  - 요일행: 일/공휴일 = 빨강 (토는 검정)
+        const ATTENDANCE_TEMPLATE_B64 = "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";
+
+        function exportAttendanceExcel() {
+            if (typeof fflate === 'undefined') {
+                alert('압축 라이브러리(fflate)를 불러오지 못했습니다. 인터넷 연결 또는 내부망 CDN 차단을 확인하세요.');
+                return;
+            }
+            if (workers.length !== 3) {
+                alert(`이 엑셀 양식은 근무자 3명 구조로 고정되어 있습니다. 현재 근무자 수: ${workers.length}명.\n앞 3명(${workers.slice(0,3).map(w=>w.name).join(', ')})만 반영됩니다.`);
+            }
+
+            const year = currentYear;
+            const savedMonth = currentMonth; // 종료 후 원복
+
+            const SI = { '월': 15, '화': 9, '수': 10, '목': 11, '금': 12, '토': 13, '일': 14 };
+            const WDK = ['일', '월', '화', '수', '목', '금', '토']; // getDay(): 0=일..6=토
+            const ABBR_IDX = { '주간': 24, '당직': 22, '비번': 23 };
+            const FIRST = 7;
+
+            function colLetter(c) {
+                let s = '';
+                while (c > 0) { const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = (c - m - 1) / 26; }
+                return s;
+            }
+            const serial = d => Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000);
+            function dateStyle(col, red) {
+                if (col === 7) return red ? 66 : 7;
+                if (col <= 29) return red ? 9 : 8;
+                return red ? 10 : 12;
+            }
+            function wdStyle(red) { return red ? 25 : 24; }
+
+            // base64 -> bytes
+            const bin = atob(ATTENDANCE_TEMPLATE_B64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            const templateFiles = fflate.unzipSync(bytes);
+            const dec = new TextDecoder('utf-8'), enc = new TextEncoder();
+
+            // --- styles.xml: G열 빨강 xf(66) 추가 (1회) ---
+            let styles = dec.decode(templateFiles['xl/styles.xml']);
+            const newXf = '<xf numFmtId="176" fontId="9" fillId="2" borderId="6" xfId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" shrinkToFit="1"/></xf>';
+            const xfm = styles.match(/<cellXfs count="(\d+)">/);
+            if (xfm) {
+                const cnt = parseInt(xfm[1], 10);
+                styles = styles.replace(`<cellXfs count="${cnt}">`, `<cellXfs count="${cnt + 1}">`);
+                styles = styles.replace('</cellXfs>', newXf + '</cellXfs>');
+            }
+
+            // --- base sheet: 요일색칠 CF 제거 + legacyDrawing 제거 (1회, 템플릿으로 재사용) ---
+            let baseSheet = dec.decode(templateFiles['xl/worksheets/sheet1.xml']);
+            baseSheet = baseSheet.replace(/<conditionalFormatting[\s\S]*?<\/conditionalFormatting>/g, function (blk) {
+                const isWd = blk.indexOf('&quot;토&quot;') !== -1 || blk.indexOf('&quot;일&quot;') !== -1 ||
+                             blk.indexOf('"토"') !== -1 || blk.indexOf('"일"') !== -1;
+                return isWd ? '' : blk;
+            });
+            baseSheet = baseSheet.replace(/<legacyDrawing[^>]*\/>/, '');
+
+            function findCell(sheet, ref) {
+                return new RegExp('<c r="' + ref + '"([^>]*?)(?:/>|>(?:[\\s\\S]*?)</c>)').exec(sheet);
+            }
+            function setCell(sheet, ref, opts) {
+                const m = findCell(sheet, ref); if (!m) return sheet;
+                let a = m[1];
+                if (opts.s !== undefined) {
+                    if (/s="\d+"/.test(a)) a = a.replace(/s="\d+"/, `s="${opts.s}"`);
+                    else a = ` s="${opts.s}"` + a;
+                }
+                a = a.replace(/\s+t="[^"]*"/g, '').replace(/\/$/, '').trimEnd();
+                let cell;
+                if (opts.blank) cell = `<c r="${ref}"${a}/>`;
+                else if (opts.idx !== undefined) cell = `<c r="${ref}"${a} t="s"><v>${opts.idx}</v></c>`;
+                else if (opts.num !== undefined) cell = `<c r="${ref}"${a}><v>${opts.num}</v></c>`;
+                else cell = `<c r="${ref}"${a}/>`;
+                return sheet.slice(0, m.index) + cell + sheet.slice(m.index + m[0].length);
+            }
+
+            const ROWS = [6, 11, 16];
+            const EXTRA = [7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20];
+            const usedWorkers = workers.slice(0, 3);
+
+            const outFiles = {};
+            outFiles['xl/styles.xml'] = enc.encode(styles);
+            outFiles['xl/sharedStrings.xml'] = templateFiles['xl/sharedStrings.xml'];
+            outFiles['xl/theme/theme1.xml'] = templateFiles['xl/theme/theme1.xml'];
+            outFiles['_rels/.rels'] = templateFiles['_rels/.rels'];
+            outFiles['docProps/core.xml'] = templateFiles['docProps/core.xml'];
+
+            const sheetTags = [], relTags = [], ctOverrides = [];
+
+            try {
+                for (let month = 1; month <= 12; month++) {
+                    // 캘린더의 실제 스케줄 생성 로직을 그대로 사용
+                    currentYear = year; currentMonth = month;
+                    const key = `${year}-${month}`;
+                    initScheduleData();
+                    const daysInMonth = getDaysInMonth(year, month);
+
+                    function shiftFor(name, day) {
+                        const a = workerAssignments[key][day], s = daySchedules[key][day];
+                        const p = a.indexOf(name);
+                        return p !== -1 ? s[p] : '';
+                    }
+
+                    let sheet = baseSheet;
+                    for (let i = 0; i < 31; i++) {
+                        const col = FIRST + i, L = colLetter(col), d = i + 1;
+                        if (d <= daysInMonth) {
+                            const dt = new Date(year, month - 1, d);
+                            const gd = dt.getDay();
+                            const sat = gd === 6, sun = gd === 0;
+                            const hol = !!getHoliday(year, month, d);
+                            sheet = setCell(sheet, `${L}2`, { s: dateStyle(col, sat || sun || hol), num: serial(dt) });
+                            sheet = setCell(sheet, `${L}4`, { s: wdStyle(sun || hol), idx: SI[WDK[gd]] });
+                            ROWS.forEach((r, wi) => {
+                                if (wi >= usedWorkers.length) return;
+                                const sh = shiftFor(usedWorkers[wi].name, d);
+                                sheet = setCell(sheet, `${L}${r}`, { idx: ABBR_IDX[sh] !== undefined ? ABBR_IDX[sh] : 23 });
+                            });
+                        } else {
+                            sheet = setCell(sheet, `${L}2`, { blank: true });
+                            sheet = setCell(sheet, `${L}4`, { blank: true });
+                            ROWS.forEach(r => sheet = setCell(sheet, `${L}${r}`, { blank: true }));
+                            EXTRA.forEach(r => sheet = setCell(sheet, `${L}${r}`, { blank: true }));
+                        }
+                    }
+
+                    const fname = `xl/worksheets/sheet${month}.xml`;
+                    outFiles[fname] = enc.encode(sheet);
+                    const rid = `rId${100 + month}`;
+                    sheetTags.push(`<sheet name="${month}월" sheetId="${month}" r:id="${rid}"/>`);
+                    relTags.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${month}.xml"/>`);
+                    ctOverrides.push(`<Override PartName="/${fname}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
+                }
+            } finally {
+                currentYear = year; currentMonth = savedMonth;
+            }
+
+            // workbook.xml
+            let wb = dec.decode(templateFiles['xl/workbook.xml']);
+            wb = wb.replace(/<sheets>[\s\S]*?<\/sheets>/, '<sheets>' + sheetTags.join('') + '</sheets>');
+            outFiles['xl/workbook.xml'] = enc.encode(wb);
+
+            // workbook.xml.rels
+            let wbr = dec.decode(templateFiles['xl/_rels/workbook.xml.rels']);
+            wbr = wbr.replace(/<Relationship Id="rId1"[^>]*\/>/, '');
+            wbr = wbr.replace('</Relationships>', relTags.join('') + '</Relationships>');
+            outFiles['xl/_rels/workbook.xml.rels'] = enc.encode(wbr);
+
+            // [Content_Types].xml
+            let ct = dec.decode(templateFiles['[Content_Types].xml']);
+            ct = ct.replace(/<Override PartName="\/xl\/worksheets\/sheet1\.xml"[^>]*\/>/, '');
+            ct = ct.replace(/<Override PartName="\/xl\/comments1\.xml"[^>]*\/>/, '');
+            ct = ct.replace('</Types>', ctOverrides.join('') + '</Types>');
+            outFiles['[Content_Types].xml'] = enc.encode(ct);
+
+            // docProps/app.xml
+            let app = dec.decode(templateFiles['docProps/app.xml']);
+            const titles = Array.from({ length: 12 }, (_, i) => `<vt:lpstr>${i + 1}월</vt:lpstr>`).join('');
+            app = app.replace(
+                /<vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>워크시트<\/vt:lpstr><\/vt:variant><vt:variant><vt:i4>1<\/vt:i4><\/vt:variant><\/vt:vector>/,
+                '<vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>워크시트</vt:lpstr></vt:variant><vt:variant><vt:i4>12</vt:i4></vt:variant></vt:vector>'
+            );
+            app = app.replace(
+                /<TitlesOfParts><vt:vector size="1" baseType="lpstr"><vt:lpstr>Sheet1<\/vt:lpstr><\/vt:vector><\/TitlesOfParts>/,
+                `<TitlesOfParts><vt:vector size="12" baseType="lpstr">${titles}</vt:vector></TitlesOfParts>`
+            );
+            outFiles['docProps/app.xml'] = enc.encode(app);
+
+            const outZip = fflate.zipSync(outFiles, { level: 6 });
+            const blob = new Blob([outZip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `근태관리_${year}.xlsx`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function exportPDF(months = 2) {
+
+            const saveMonth = currentMonth;
+            const saveYear = currentYear;
+
+            // PDF용 HTML 생성
+            // 3개월일 경우 pdf-3-month 클래스 추가
+            // 근무만 보기일 경우 pdf-work-only 클래스 추가
+            let wrapperClass = 'pdf-page';
+            if (months === 3) wrapperClass += ' pdf-3-month';
+            if (isWorkOnlyMode) wrapperClass += ' pdf-work-only';
+
+            let pdfHTML = `<div class="${wrapperClass}">`;
+
+            let pdfYear = currentYear;
+            let pdfMonth = currentMonth;
+
+            pdfHTML += `<div class="pdf-header">시설팀 근무표 (${pdfYear}년 ${pdfMonth}월 ~ `;
+
+            let finalYear = pdfYear;
+            let finalMonth = pdfMonth + (months - 1);
+            while (finalMonth > 12) {
+                finalMonth -= 12;
+                finalYear++;
+            }
+            pdfHTML += `${finalYear}년 ${finalMonth}월)</div>`;
+
+            // n개월 생성
+            for (let i = 0; i < months; i++) {
+                pdfHTML += generateMonthHTML(pdfYear, pdfMonth);
+                pdfMonth++;
+                if (pdfMonth > 12) {
+                    pdfMonth = 1;
+                    pdfYear++;
+                }
+            }
+
+            pdfHTML += '</div>';
+
+            // PDF 생성
+            const element = document.createElement('div');
+            element.innerHTML = pdfHTML;
+            document.body.appendChild(element);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `시설팀_근무표_${saveYear}년_${saveMonth}월-${finalMonth}월${isWorkOnlyMode ? '_근무만' : '_전체'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.body.removeChild(element);
+                showToast('PDF 다운로드가 완료되었습니다');
+            }).catch((error) => {
+                console.error('PDF 생성 오류:', error);
+                document.body.removeChild(element);
+                showToast('❌ PDF 생성 중 오류가 발생했습니다');
+            });
+        }
+
+        // 월별 HTML 생성 (PDF용)
+        function generateMonthHTML(year, month) {
+            const key = `${year}-${month}`;
+
+            // 해당 월의 스케줄 데이터가 없으면 생성
+            if (!scheduleData[key]) {
+                const tempYear = currentYear;
+                const tempMonth = currentMonth;
+                currentYear = year;
+                currentMonth = month;
+                initScheduleData();
+                currentYear = tempYear;
+                currentMonth = tempMonth;
+            }
+
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month);
+
+            let html = `<div class="pdf-month-container">`;
+            html += `<div class="pdf-month-title">${year}년 ${month}월</div>`;
+            html += '<div class="pdf-weekday-header">';
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            const weekdayClasses = ['sunday', '', '', '', '', '', 'saturday'];
+            weekdays.forEach((d, i) => {
+                const className = weekdayClasses[i] ? `pdf-weekday ${weekdayClasses[i]}` : 'pdf-weekday';
+                html += `<div class="${className}">${d}</div>`;
+            });
+            html += '</div><div class="pdf-calendar-grid">';
+
+            // 빈 셀
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="pdf-day-cell" style="border:none;background:transparent;"></div>';
+            }
+
+            // 날짜 셀
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const weekday = date.getDay();
+                const holiday = getHoliday(year, month, day);
+                const assignments = workerAssignments[key][day];
+                const schedules = daySchedules[key][day];
+                const originals = originalAssignments[key][day];
+
+                let cellClass = 'pdf-day-cell';
+                if (weekday === 0) cellClass += ' sunday';
+                if (weekday === 6) cellClass += ' saturday';
+                if (holiday) cellClass += ' holiday';
+
+                html += `<div class="${cellClass}">`;
+                html += `<div class="pdf-day-number">${day}`;
+                if (holiday) html += ` <span style="font-size:8px;color:#dc3545;font-weight:700;">${holiday}</span>`;
+                html += '</div>';
+
+                // 근무 목록 데이터 준비
+                let shiftData = [];
+                assignments.forEach((workerName, idx) => {
+                    shiftData.push({
+                        name: workerName,
+                        shift: schedules[idx],
+                        isChanged: workerName !== originals[idx]
+                    });
+                });
+
+                // 근무만 보기 모드일 경우 필터링 및 정렬
+                if (isWorkOnlyMode) {
+                    // 비번 제외
+                    shiftData = shiftData.filter(item => item.shift !== '비번');
+
+                    // 주간 -> 당직 순서 정렬
+                    const order = { '주간': 1, '당직': 2 };
+                    shiftData.sort((a, b) => {
+                        return (order[a.shift] || 99) - (order[b.shift] || 99);
+                    });
+                }
+
+                shiftData.forEach(item => {
+                    const displayName = item.isChanged ? `${item.name}🔄` : item.name;
+                    const style = item.isChanged ? 'font-weight:900;text-decoration:underline;' : '';
+                    html += `<div class="pdf-shift-item ${item.shift}" style="${style}">${displayName} ${item.shift}</div>`;
+                });
+
+                html += '</div>';
+            }
+
+            html += '</div></div>';
+            return html;
+        }
+
+        // 토스트
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 초기화
+
+        /* ================= 서버 동기화 (Supabase · 당직일지와 같은 팀 코드) =================
+           config 표: 'sched:workers' = 근무자 3명, 'sched:YYYY-M' = 그 달의 교대 배정.
+           서버에 못 보낸 변경은 이 기기에 남겨 두었다가 연결되면 다시 보낸다. */
+        const CFG = window.DUTY_CONFIG || {};
+        const POLL_MS = 30000;
+        let online = false, remoteReady = storage.getItem('sched.synced') === '1';
+        let pendingMonths = new Set(JSON.parse(storage.getItem('sched.pending') || '[]'));
+        let pendingWorkers = storage.getItem('sched.pendingWorkers') === '1';
+        const el = id => document.getElementById(id);
+        function configured() { return !!(CFG.supabaseUrl && CFG.supabaseKey && !/YOUR_|여기에/.test(CFG.supabaseUrl + CFG.supabaseKey)); }
+        function teamCode() { try { return window['local' + 'Storage'].getItem('dutylog.team') || ''; } catch (e) { return ''; } }
+        function setSync(kind, text) { el('syncDot').className = 'dot ' + kind; el('syncText').textContent = text; }
+        function savePending() { storage.setItem('sched.pending', JSON.stringify([...pendingMonths])); }
+        async function sb(path, opt) {
+            opt = opt || {};
+            const headers = Object.assign({ apikey: CFG.supabaseKey, Authorization: 'Bearer ' + CFG.supabaseKey, 'x-team-code': teamCode() }, opt.headers || {});
+            const r = await fetch(CFG.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/' + path, Object.assign({}, opt, { headers, cache: 'no-store' }));
+            if (!r.ok) { const e = new Error(await r.text().catch(() => String(r.status))); e.status = r.status; throw e; }
+            const t = await r.text(); return t ? JSON.parse(t) : null;
+        }
+        const upsertCfg = (key, data) => sb('config?on_conflict=key', { method: 'POST',
+            headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ key, data }]) });
+
+        function canEdit() {
+            if (!configured() || remoteReady) return true;
+            showToast('⏳ 서버와 동기화 중입니다. 잠시 후 다시 시도하세요');
+            return false;
+        }
+        function persistWorkers() {
+            storage.setItem('workers', JSON.stringify(workers));
+            pendingWorkers = true; storage.setItem('sched.pendingWorkers', '1');
+            flushRemote();
+        }
+        async function flushRemote() {
+            if (!configured() || !teamCode()) return;
+            if (!pendingWorkers && pendingMonths.size === 0) return;
+            setSync('busy', '저장 중…');
+            try {
+                if (pendingWorkers) { await upsertCfg('sched:workers', workers); pendingWorkers = false; storage.setItem('sched.pendingWorkers', '0'); }
+                for (const k of [...pendingMonths]) { await upsertCfg('sched:' + k, workerAssignments[k] || {}); pendingMonths.delete(k); savePending(); }
+                online = true; setSync('on', '저장됨 ' + new Date().toTimeString().slice(0, 5));
+            } catch (e) {
+                online = false;
+                if (e.status === 401 || e.status === 403) { setSync('off', '팀 코드 확인 필요'); showGate('팀 코드가 맞지 않습니다.'); }
+                else setSync('off', '오프라인 · 기기에 보관 중');
+            }
+        }
+        async function pullRemote() {
+            const rows = await sb('config?select=key,data&key=like.sched:*');
+            let changed = false;
+            rows.forEach(r => {
+                if (r.key === 'sched:workers') {
+                    if (pendingWorkers) return;
+                    const nw = normalizeWorkers(r.data);
+                    if (JSON.stringify(nw) !== JSON.stringify(workers)) { workers = nw; storage.setItem('workers', JSON.stringify(workers)); changed = true; }
+                } else {
+                    const mk = r.key.slice(6);
+                    if (pendingMonths.has(mk)) return;
+                    if (JSON.stringify(workerAssignments[mk]) !== JSON.stringify(r.data)) { workerAssignments[mk] = r.data; changed = true; }
+                }
+            });
+            if (changed) {
+                storage.setItem('workerAssignments', JSON.stringify(workerAssignments));
+                scheduleData = {};
+                renderCalendar();
+            }
+        }
+        async function syncNow() {
+            if (!configured()) { setSync('off', '설정 필요'); return; }
+            try {
+                const ok = await sb('rpc/team_check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+                if (ok === false) { showGate(teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off', '팀 코드 필요'); return; }
+                el('gate').hidden = true;
+                await flushRemote();
+                await pullRemote();
+                remoteReady = true; storage.setItem('sched.synced', '1');
+                online = true; setSync('on', '동기화됨 ' + new Date().toTimeString().slice(0, 5));
+            } catch (e) {
+                online = false;
+                setSync('off', (pendingWorkers || pendingMonths.size) ? '오프라인 · 기기에 보관 중' : '연결 안 됨');
+            }
+        }
+        function showGate(msg) { el('gate').hidden = false; el('gateMsg').textContent = msg || ''; setTimeout(() => el('gateInput').focus(), 50); }
+        el('gateForm').addEventListener('submit', e => {
+            e.preventDefault(); const v = el('gateInput').value.trim();
+            if (!/^[\x21-\x7e]{4,64}$/.test(v)) { el('gateMsg').textContent = '영문·숫자·기호 4자 이상으로 입력하세요.'; return; }
+            try { window['local' + 'Storage'].setItem('dutylog.team', v); } catch (err) { }
+            el('gateMsg').textContent = '확인 중…'; syncNow();
+        });
+        setInterval(() => { if (document.visibilityState === 'visible' && !draggedWorker) syncNow(); }, POLL_MS);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
+        window.addEventListener('online', syncNow);
+
+        initTheme();
+        updateViewModeUI(false); // 초기 UI 설정
+        renderCalendar();
+        syncNow();
+
+        // 설정창 열기
+        function openSettings() {
+            const form = document.getElementById('settingForm');
+            form.innerHTML = '';
+
+            workers.forEach((worker, index) => {
+                const group = document.createElement('div');
+                group.className = 'setting-group';
+                group.innerHTML = `
+                    <div style="font-weight:700; margin-bottom:10px; color:var(--text-secondary);">
+                        근무자 ${index + 1}
+                    </div>
+                    <div class="setting-show-row">
+                        <span class="setting-label">이름</span>
+                        <input type="text" class="setting-input" id="workerName${index}" value="${worker.name}">
+                    </div>
+                    <div class="setting-show-row">
+                        <span class="setting-label">직급</span>
+                        <input type="text" class="setting-input" id="workerPos${index}" value="${worker.position}">
+                    </div>
+                    <div class="setting-show-row">
+                        <span class="setting-label">연락처</span>
+                        <input type="text" class="setting-input" id="workerPhone${index}" value="${worker.phone}">
+                    </div>
+                `;
+                form.appendChild(group);
+            });
+
+            document.getElementById('settingModal').style.display = 'flex';
+        }
+
+        // 설정창 닫기
+        function closeSettings() {
+            document.getElementById('settingModal').style.display = 'none';
+        }
+
+        // 설정 저장
+        function saveWorkerSettings() {
+            if (!canEdit()) return;
+            const newWorkers = [];
+            let isNameChanged = false;
+
+            // 변경된 이름 매핑 (Old -> New)
+            const nameMap = {};
+
+            for (let i = 0; i < workers.length; i++) {
+                const newName = document.getElementById(`workerName${i}`).value.trim();
+                const newPos = document.getElementById(`workerPos${i}`).value.trim();
+                const newPhone = document.getElementById(`workerPhone${i}`).value.trim();
+
+                if (!newName) {
+                    alert('이름을 모두 입력해주세요.');
+                    return;
+                }
+
+                if (workers[i].name !== newName) {
+                    isNameChanged = true;
+                    nameMap[workers[i].name] = newName;
+                }
+
+                newWorkers.push({
+                    name: newName,
+                    position: newPos,
+                    phone: newPhone,
+                    patternIndex: Number.isInteger(workers[i].patternIndex) ? workers[i].patternIndex : i
+                });
+            }
+
+            // 워커 정보 업데이트
+            workers = newWorkers;
+            persistWorkers();
+
+            // 할당된 근무표의 이름도 변경해야 함
+            if (isNameChanged) {
+                // workerAssignments 순회하며 이름 변경
+                for (const monthKey in workerAssignments) {
+                    for (const day in workerAssignments[monthKey]) {
+                        workerAssignments[monthKey][day] = workerAssignments[monthKey][day].map(name => {
+                            return nameMap[name] || name;
+                        });
+                    }
+                }
+
+                // originalAssignments 이름 변경
+                for (const monthKey in originalAssignments) {
+                    for (const day in originalAssignments[monthKey]) {
+                        originalAssignments[monthKey][day] = originalAssignments[monthKey][day].map(name => {
+                            return nameMap[name] || name;
+                        });
+                    }
+                }
+
+                saveData(true); // 변경된 할당 정보 저장 (이름이 바뀐 모든 달)
+            }
+
+            // 스케줄 데이터 재생성 (이름이 키로 사용되므로)
+            scheduleData = {};
+
+            showToast('✅ 근무자 정보가 저장되었습니다');
+            closeSettings();
+            renderCalendar();
+        }
+    </script>
+</body>
+
+</html>
