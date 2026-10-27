@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<title>시설팀 당직일지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 흰 바탕에 얇은 윤곽선 박스, 검정 버튼. 제목 → 날짜 → 기온 순으로 쌓고, 입력은 한 열 목록. 인쇄물은 테마와 무관한 흰 종이. */
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#111111; --muted:#777777; --line:#E4E4E4; --field-line:#BDBDBD; --soft:#F3F3F3;
+  --accent:#111111; --accent-ink:#FFFFFF; --accent-soft:#F3F3F3;
+  --warn:#8A5A00; --warn-soft:#FFF4DD; --bad:#C62828; --bad-soft:#FDECEA;
+  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-head:#FFF4D6; --paper-sub:#F2F2F2;
+  --f-ui:"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-num:"Roboto", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --f-doc:"Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
+  --accent:#F2F2F2; --accent-ink:#111111; --accent-soft:#1A1A1A;
+  --warn:#F0B451; --warn-soft:#2E2410; --bad:#FF8A80; --bad-soft:#331816; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E0E0E; --surface:#0E0E0E; --ink:#F2F2F2; --muted:#9A9A9A; --line:#2A2A2A; --field-line:#4A4A4A; --soft:#1A1A1A;
+  --accent:#F2F2F2; --accent-ink:#111111; --accent-soft:#1A1A1A;
+  --warn:#F0B451; --warn-soft:#2E2410; --bad:#FF8A80; --bad-soft:#331816; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.6}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ink)} .dot.busy{background:var(--warn)} .dot.off{background:var(--bad)}
+
+/* 상단: 제목 / 날짜 / 기온 */
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:640px;margin:0 auto}
+.head{padding-block:22px 14px}
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.titlebar h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.sync{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.datebar{display:flex;align-items:center;gap:6px;margin-top:14px}
+.dlabel{position:relative;flex:1;min-width:0}
+.dlabel b{display:block;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.dlabel input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.datebar .nav{border:1px solid var(--field-line);background:var(--surface);width:36px;height:36px;border-radius:6px;font-size:18px;line-height:1;color:var(--ink);cursor:pointer}
+.wx{display:flex;gap:8px;margin-top:12px}
+.wx label{display:flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid var(--field-line);border-radius:6px;padding:0 10px;height:42px;font-size:12.5px;color:var(--muted);min-width:0;flex:1}
+.wx label:first-child{flex:1.4}
+.wx label:focus-within{border-color:var(--ink)}
+.wx input{flex:1;border:0;outline:0;background:none;width:100%;min-width:0;font-size:16px;font-weight:600;color:var(--ink);text-align:right;font-family:var(--f-num)}
+.wx label:first-child input{text-align:left;font-family:var(--f-ui)}
+.wx i{font-style:normal;color:var(--muted);font-size:13px}
+
+.tabsWrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs{display:flex}
+.tabs button{flex:1;border:0;background:none;padding:12px 4px;font-weight:600;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+
+main{padding-block:18px 110px}
+.panel{display:flex;flex-direction:column;gap:24px}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec > header{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.sec h2{margin:0;font-size:15px;font-weight:700}
+.sec .note{font-size:12px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.banner{border-radius:8px;padding:10px 12px;font-size:13.5px}
+.banner.warn{background:var(--warn-soft);color:var(--warn)}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.banner.info{background:var(--soft);color:var(--ink)}
+
+/* 공통 행 */
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;min-height:54px}
+.row + .row, .row + .mrow, .mrow + .mrow, .mrow + .row{border-top:1px solid var(--line)}
+.row .lb{flex:1;min-width:0;font-size:14.5px}
+.row .lb small{display:block;font-size:12px;color:var(--muted)}
+.inp{display:flex;align-items:center;gap:6px;flex:none}
+.inp input{width:104px;height:40px;border:1px solid var(--field-line);border-radius:6px;background:var(--surface);text-align:right;padding:0 10px;
+  font-family:var(--f-num);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.inp input:focus{border-color:var(--ink);outline:none}
+.inp input.out{border-color:var(--bad);color:var(--bad)}
+.inp .u{font-size:12.5px;color:var(--muted);width:20px}
+
+/* 검침 행 */
+.mrow{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.mrow .top2{display:flex;align-items:center;gap:12px}
+.mrow .lb{flex:1;font-size:15px;font-weight:600;min-width:0}
+.mrow .lb small{font-weight:400;color:var(--muted);font-size:12px;margin-left:4px}
+.mrow input{width:140px;height:46px;font-size:18px}
+.res{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.res b{font-family:var(--f-num);font-weight:600;color:var(--ink);margin-left:3px}
+.res b.neg{color:var(--bad)}
+.err{font-size:12.5px;color:var(--bad)}
+.err.warn{color:var(--warn)}
+
+/* 상태 토글 */
+.seg{display:inline-flex;border:1px solid var(--field-line);border-radius:6px;overflow:hidden;flex:none}
+.seg button{border:0;border-left:1px solid var(--field-line);background:var(--surface);padding:7px 12px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;min-width:48px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"].abn{background:var(--bad);color:#fff}
+.row.flag{background:var(--bad-soft)}
+
+/* 입력 칸 */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 14px}
+.grid4 + .grid4{border-top:1px solid var(--line)}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.fld input,.fld textarea{border:1px solid var(--field-line);border-radius:6px;background:var(--surface);padding:8px 10px;font-size:16px;color:var(--ink);width:100%;min-width:0}
+.fld input:focus,.fld textarea:focus{border-color:var(--ink);outline:none}
+.fld.w2{grid-column:span 2}
+textarea{resize:vertical;min-height:80px}
+details.card summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:14px;cursor:pointer;font-weight:600;font-size:14.5px}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"＋";color:var(--muted)}
+details.card[open] summary::after{content:"－"}
+details.card[open] summary{border-bottom:1px solid var(--line)}
+.mm{font-size:11.5px;color:var(--muted);font-family:var(--f-num)}
+
+/* 하단 버튼 바 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.bar .wrap{display:flex;align-items:center;gap:10px}
+.prog{flex:1;min-width:0;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column}
+.prog b{color:var(--ink);font-size:14px}
+.btn{border:1px solid var(--ink);border-radius:8px;height:46px;padding:0 20px;font-weight:700;cursor:pointer;font-size:15px;flex:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none;color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+#bar.onsheet .btn{flex:1}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+
+@media (max-width:440px){
+  .grid4{grid-template-columns:1fr 1fr}
+  .mrow input{width:124px}
+  .inp input{width:92px}
+  .wx label{padding:0 8px;gap:5px;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- A4 시트 ---------- */
+.preview{overflow:hidden;border-radius:6px;box-shadow:0 1px 0 var(--line),0 8px 24px rgba(0,0,0,.12);background:var(--paper)}
+.scaler{transform-origin:0 0}
+.sheet{width:794px;min-height:1123px;display:flex;flex-direction:column;background:var(--paper);color:var(--paper-ink);font-family:var(--f-doc);padding:44px 40px 36px;font-size:11px;line-height:1.3}
+.sheet table{border-collapse:collapse;width:100%;table-layout:fixed}
+.sheet td,.sheet th{border:1px solid var(--paper-line);padding:3px 5px;text-align:center;vertical-align:middle;font-weight:500}
+.sh-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
+.sh-title{font-size:28px;font-weight:800;letter-spacing:.12em;padding:0 0 14px 30px;white-space:nowrap}
+.sheet table.appr{width:auto}
+.appr td{width:64px;height:20px;font-size:11px;padding:2px}
+.appr td.k{width:24px;font-weight:700;line-height:1.9}
+.appr td.sig{height:64px;font-size:12px;font-weight:700}
+.sh-date{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin:8px 4px 4px}
+.sh-date span b{font-weight:500;display:inline-block;min-width:40px;text-align:center;border-bottom:1px solid #999}
+.sh-sec{background:var(--paper-head);font-size:15px;font-weight:800!important;height:30px}
+.sh-col{background:var(--paper-sub);font-weight:700!important;height:28px}
+.en td{height:37px}
+.en td.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:10px;font-size:12px}
+.en td.l{font-weight:700;font-size:12px}
+.en td.n.t0{font-size:15px;font-weight:800}
+.en td.n.t1{font-weight:800}
+.run{font-size:11px;text-align:left!important;padding-left:14px!important}
+.run span{display:inline-block;margin-right:28px}
+.pt td{height:24px;font-size:11px}
+.sheet td.sh-sec{font-size:20px;font-weight:800;height:44px;letter-spacing:.08em}
+.pt td.h{background:var(--paper-sub);font-weight:700;height:34px;font-size:12.5px}
+.pt td.b{text-align:left;padding:4px 8px;vertical-align:middle}
+.it{display:flex;justify-content:space-between;align-items:center;gap:4px;line-height:1.6;white-space:nowrap}
+.it .lab{font-size:10.5px}
+.it .val{font-size:15px;font-weight:800}
+.it .val i{font-style:normal;font-size:10px;font-weight:500;margin-left:2px}
+.opts{display:inline-flex;align-items:center;gap:2px}
+.it.ctr{justify-content:center;gap:12px}
+.it.ctr .val{font-size:18px}
+.pt td.c{text-align:center}
+.o{font-size:10.5px;padding:0 3px;color:#9a9a9a}
+.o.sel{font-size:14px;color:#000;font-weight:800;padding:0 4px}
+.v{display:inline-block;min-width:34px;text-align:center;font-weight:700;font-size:11.5px}
+.mgg{display:grid;grid-template-columns:1fr 1fr 1.25fr;white-space:nowrap;font-size:10.5px;line-height:1.6}
+.mgg b{display:inline-block;min-width:20px;text-align:center;font-size:15px;font-weight:800}
+.mt td{height:27px;font-size:10.5px}
+.mt td.n{text-align:right;padding-right:6px;font-variant-numeric:tabular-nums}
+.mt td.u{font-size:9px;color:#555;text-align:right}
+.mt .hd{font-weight:700;font-size:10px}
+.nt{flex:1 1 auto}
+.nt td{height:56px}
+.nt td.l{font-weight:700;width:78px}
+.nt td.b{text-align:left;padding:6px 10px;white-space:pre-wrap;font-size:11px}
+.foot{margin-top:6px;font-size:9px;color:#777;text-align:right}
+
+#capture{position:fixed;left:-10000px;top:0}
+.empty{color:var(--muted);text-align:center;padding:26px 14px;font-size:14px}
+.hist button{display:flex;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:13px 14px;cursor:pointer;text-align:left;font-size:14.5px}
+.hist button + button{border-top:1px solid var(--line)}
+.hist .st{font-size:12.5px;color:var(--muted)}
+.preview{overflow:hidden;border-radius:6px;box-shadow:0 1px 0 var(--line),0 8px 24px rgba(0,0,0,.12);background:var(--paper)}
+.scaler{transform-origin:0 0}
+
+[hidden]{display:none!important}
+html,body{margin:0}
+#bar.onsheet .btn{padding:0 10px}
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.gatebox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.gatebox h2{margin:0;font-size:20px}
+.gatebox input{height:48px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;font-size:18px;background:var(--surface);color:var(--ink)}
+.gatebox input:focus{outline:none;border-color:var(--ink)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;padding:14px}
+.tools .btn{height:42px;font-size:14px;padding:0 14px}
+.tools p{flex-basis:100%;margin:0}
+#printArea{display:none}
+@page{size:A4 portrait;margin:0}
+@media print{
+  html,body{background:#fff!important;width:210mm}
+  body > *:not(#printArea){display:none!important}
+  #printArea{display:block!important;width:210mm;height:296.5mm;overflow:hidden}
+  #printArea .sheet{transform:scale(.995);transform-origin:0 0}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style>
+</head>
+<body>
+
+<header class="head gut">
+  <div class="wrap">
+    <div class="titlebar">
+      <h1>시설팀 당직일지</h1>
+      <div class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></div>
+    </div>
+    <div class="datebar">
+      <div class="dlabel">
+        <b id="dateText">-</b>
+        <input type="date" id="date" aria-label="날짜 선택">
+      </div>
+      <button type="button" class="nav" id="prevDay" aria-label="전날">‹</button>
+      <button type="button" class="nav" id="nextDay" aria-label="다음날">›</button>
+    </div>
+    <div class="wx">
+      <label>날씨<input id="weather" placeholder="맑음"></label>
+      <label>최고<input id="tHi" inputmode="decimal" placeholder="-"><i>℃</i></label>
+      <label>최저<input id="tLo" inputmode="decimal" placeholder="-"><i>℃</i></label>
+    </div>
+  </div>
+</header>
+<div class="tabsWrap gut">
+  <div class="wrap">
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-input" aria-selected="true" data-tab="input">입력</button>
+      <button role="tab" id="tab-sheet" aria-selected="false" data-tab="sheet">일지</button>
+      <button role="tab" id="tab-base" aria-selected="false" data-tab="base">기록</button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap gut">
+  <!-- 입력 -->
+  <section class="panel" id="p-input">
+    <div id="msgs" class="sec"></div>
+
+    <div class="sec">
+      <header><h2>에너지 검침</h2><span class="note">금일 검침값만 입력</span></header>
+      <div class="card" id="meters"></div>
+    </div>
+
+    <div class="sec">
+      <header><h2>측정값</h2><span class="note">순찰하며 읽은 숫자</span></header>
+      <div class="card" id="nums"></div>
+    </div>
+
+    <div class="sec">
+      <header><h2>상태 점검</h2><span class="note">이상 있을 때만 바꾸세요</span></header>
+      <div class="card" id="status"></div>
+    </div>
+
+    <div class="sec">
+      <header><h2>가동 시간</h2></header>
+      <div class="card"><div class="grid4" id="run"></div></div>
+    </div>
+
+    <details class="card" id="monthlyBox">
+      <summary>월말 검침 <span class="note" style="font-weight:400;margin-left:auto;margin-right:10px;color:var(--muted);font-size:12px">매월 말일</span></summary>
+      <div id="monthly"></div>
+    </details>
+
+    <div class="sec">
+      <header><h2>특이사항</h2></header>
+      <div class="card" style="padding:12px 14px"><label class="fld"><textarea id="notes" aria-label="특이사항" placeholder="없으면 비워두세요"></textarea></label></div>
+    </div>
+  </section>
+
+  <!-- 일지 -->
+  <section class="panel" id="p-sheet" hidden>
+    <p class="hint">출력 버튼은 A4 세로 1장으로 바로 인쇄합니다. 인쇄 창에서 여백 '없음', 배율 100%로 두세요. <span id="pdfMsg"></span></p>
+    <div class="preview" id="preview"><div class="scaler" id="scaler"></div></div>
+  </section>
+
+  <!-- 기록 -->
+  <section class="panel" id="p-base" hidden>
+    <div class="sec">
+      <header><h2>최근 기록</h2></header>
+      <div class="card hist" id="history"></div>
+    </div>
+    <details class="card" id="baseBox">
+      <summary>시작 기준값</summary>
+      <p class="hint" style="padding:12px 18px 0">앱에 이전 기록이 하나도 없을 때만 쓰입니다. 처음 쓰는 날의 전날 종이 일지 값을 넣으세요.</p>
+      <div id="baseMeters"></div>
+      <div id="baseMonthly"></div>
+      <div style="padding:12px 14px;display:flex;gap:10px;align-items:center"><button type="button" class="btn primary" id="saveBase">기준값 저장</button><span class="hint" id="baseMsg"></span></div>
+    </details>
+    <details class="card" id="toolBox">
+      <summary>백업 · 설정</summary>
+      <div class="tools">
+        <button type="button" class="btn ghost" id="exportBtn">전체 백업 받기</button>
+        <label class="btn ghost" style="display:inline-flex;align-items:center">백업 불러오기<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+        <button type="button" class="btn ghost" id="forgetTeam">이 기기 팀 코드 지우기</button>
+        <p class="hint" id="toolMsg">백업 파일(JSON)에는 모든 날짜의 입력값과 시작 기준값이 들어 있습니다. 한 달에 한 번 받아 두세요.</p>
+      </div>
+    </details>
+  </section>
+</main>
+
+<div class="bar" id="bar">
+  <div class="wrap">
+    <div class="prog" id="prog"></div>
+    <button type="button" class="btn ghost" id="xlsBtn" hidden>엑셀</button>
+    <button type="button" class="btn ghost" id="pdfBtn" hidden>PDF</button>
+    <button type="button" class="btn primary" id="barBtn">일지 보기</button>
+  </div>
+</div>
+
+<div id="capture" aria-hidden="true"></div>
+<div id="printArea" aria-hidden="true"></div>
+
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <h2>시설팀 당직일지</h2>
+    <p class="hint">팀 코드를 입력하세요. 이 기기에 기억되어 다음부터는 묻지 않습니다.</p>
+    <input id="gateInput" type="password" autocomplete="off" aria-label="팀 코드" required>
+    <button type="submit" class="btn primary">확인</button>
+    <p class="err" id="gateMsg"></p>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+/* ================= 정의 ================= */
+const METERS = [
+  {k:'elec',  label:'전력', sub:'사용량', dec:1, mode:'usage'},
+  {k:'heat',  label:'난방/급탕', group:'지역 냉난방', dec:1, mode:'cum'},
+  {k:'cool',  label:'냉방', group:'지역 냉난방', dec:1, mode:'cum'},
+  {k:'water', label:'수도', dec:0, mode:'cum'},
+  {k:'gas',   label:'도시가스', sub:'식당', dec:0, mode:'cum'},
+  {k:'drain', label:'주차장 영구배수', dec:1, mode:'cum'},
+];
+const RUN = [
+  {k:'fcu', label:'FCU 난방', def:'24h'}, {k:'floor', label:'바닥 난방', def:'24h'},
+  {k:'hot', label:'급탕', def:'24h'}, {k:'cool', label:'냉방', def:'0'},
+];
+const MONTHLY = [
+  {k:'hot101', label:'101 온수', unit:'㎥', dec:2},
+  {k:'water101', label:'101 수도', unit:'㎥', dec:2},
+  {k:'hvac12', label:'1,2층 상가1,2 냉난방', unit:'㎿h', dec:3},
+  {k:'hot203', label:'203 온수', unit:'㎥', dec:2},
+  {k:'water203', label:'203 수도', unit:'㎥', dec:2},
+  {k:'p2lc', label:'P-2LC 전력량계', unit:'㎾h', dec:1},
+  {k:'hvac3', label:'2층 상가3 냉난방', unit:'㎿h', dec:3},
+];
+const S2 = ['정상','비정상'];
+// ok = 기본값(정상 상태). def = 숫자 기본값
+const PATROL = [
+  {t:'옥상 냉각탑', items:[{k:'ctLevel',l:'냉각탑 수위',o:['높음','보통','낮음'],ok:'보통'},{k:'ctNoise',l:'냉각탑 이상 소음',o:['유','무'],ok:'무'}]},
+  {t:'가로등&간판', items:[{k:'lights',l:'점등 상태',o:S2,ok:'정상'}]},
+  {t:'주방 워크인 냉장&냉동 온도', items:[{k:'fridge',l:'냉장 (2~3 ℃)',n:true,u:'℃',r:[2,3],short:'워크인 냉장',hint:'2~3 ℃'},{k:'freezer',l:'냉동 (-18~-22 ℃)',n:true,u:'℃',r:[-22,-18],short:'워크인 냉동',hint:'-18~-22 ℃'}]},
+  {t:'식당 퇴실 점검', items:[{k:'kGas',l:'가스',o:['Open','Close'],ok:'Close'},{k:'kWater',l:'수도',o:['Open','Close'],ok:'Close'}]},
+  {t:'저수조 수위', items:[{k:'tankWater',l:'현 수위',n:true,u:'%',short:'저수조 수위'}]},
+  {t:'소화수조 수위', items:[{k:'tankFire',l:'현 수위',n:true,u:'%',short:'소화수조 수위'}]},
+  {t:'검사실 폐수', items:[{k:'labWaste',l:'현 수위',n:true,u:'%',short:'검사실 폐수'}]},
+  {t:'의료가스실', items:[{k:'mgPress',l:'가스압력',n:true,u:'㎫',short:'의료가스 압력'}], mg:true},
+  {t:'주차장 배수 펌프', items:[{k:'pParking',l:'작동 여부',o:S2,ok:'정상'}]},
+  {t:'기계실 배수 펌프', items:[{k:'pMech',l:'작동 여부',o:S2,ok:'정상'}]},
+  {t:'정화조 / 졸라펌프실', items:[{k:'pSeptic',l:'펌프 상태',o:S2,ok:'정상'}]},
+  {t:'부스터 펌프', items:[{k:'pBooster',l:'가동 상태',o:S2,ok:'정상'}]},
+  {t:'5층 통신실', items:[{k:'commTemp',l:'실내온도',n:true,u:'℃',def:'25',short:'5층 통신실 온도'},{k:'commLeak',l:'에어컨 누수여부',o:S2,ok:'정상'}]},
+  {t:'UPS실', items:[{k:'ups',l:'가동 상태',o:S2,ok:'정상'}]},
+];
+const MG = [{k:'mgFull',l:'실병',def:'8'},{k:'mgEmpty',l:'공병'},{k:'mgUse',l:'사용중',def:'4'}];
+const WD = ['일','월','화','수','목','금','토'];
+const STATUS = []; const NUMS = [];
+PATROL.forEach(b => b.items.forEach(it => (it.n?NUMS:STATUS).push({...it, box:b.t})));
+NUMS.push(...MG.map(g=>({k:g.k, n:true, u:'병', short:'의료가스 '+g.l, def:g.def, carry:g.k==='mgEmpty'})));
+const NUM_ORDER = ['tankWater','tankFire','labWaste','fridge','freezer','mgPress','mgFull','mgEmpty','mgUse','commTemp'];
+NUMS.sort((a,b) => NUM_ORDER.indexOf(a.k) - NUM_ORDER.indexOf(b.k));
+
+/* ================= 상태 ================= */
+let db = null, online = false, logs = {}, base = {meters:{}, monthly:{}}, curDate = todayStr(), cur = null, dirty = false, saveTimer = null;
+const $ = id => document.getElementById(id);
+const store = { get(k){ try{return localStorage.getItem(k)}catch(e){return null} }, set(k,v){ try{localStorage.setItem(k,v)}catch(e){} } };
+
+function todayStr(){ return ymd(new Date()); }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseD(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(s,n){ const d=parseD(s); d.setDate(d.getDate()+n); return ymd(d); }
+function ym(s){ return s.slice(0,7); }
+function isMonthEnd(s){ return ym(addDays(s,1))!==ym(s); }
+function num(v){ if(v===''||v==null) return null; const x=Number(String(v).replace(/,/g,'')); return Number.isFinite(x)?x:null; }
+function r6(x){ return x==null?null:Math.round(x*1e6)/1e6; }
+function fmt(x,dec){ if(x==null) return ''; const v=Math.round(x*10**dec)/10**dec; return (Object.is(v,-0)?0:v).toFixed(dec); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function emptyLog(date){ return {date, worker:'', weather:'', tHi:'', tLo:'', meters:{}, run:{}, patrol:{}, monthly:{}, notes:''}; }
+function applyDefaults(L){
+  STATUS.forEach(it => { if(L.patrol[it.k]===undefined) L.patrol[it.k]=it.ok; });
+  NUMS.forEach(it => { if(it.def!=null && L.patrol[it.k]===undefined) L.patrol[it.k]=it.def; });
+  RUN.forEach(r => { if(L.run[r.k]===undefined) L.run[r.k]=r.def; });
+  return L;
+}
+
+/* ================= 계산 (엑셀 계산기와 동일) =================
+   누적계량(cum): 사용량 = 금일 - 전일검침 / 증감 = 사용량 - 전일사용량
+   전력(usage):   사용량 = 금일값      / 증감 = 금일 - 전일값
+   월누계 = 같은 달이면 전일 월누계 + 사용량, 달이 바뀌면 사용량부터 새로 시작 */
+function computeAll(overlay){
+  const all = {...logs}; if(overlay) all[overlay.date] = overlay;
+  const dates = Object.keys(all).sort();
+  const res = {}; let state = null;
+  dates.forEach((d,i) => {
+    const L = all[d]; const out = {meters:{}, prevDate: i>0?dates[i-1]:null};
+    if(!state){
+      state = {}; const bd = addDays(d,-1);
+      METERS.forEach(m => { const b=(base.meters||{})[m.k]||{}; state[m.k] = {reading:num(b.reading), usage:num(b.usage), month:num(b.month), date:bd}; });
+      out.fromBase = true;
+    }
+    METERS.forEach(m => {
+      const p = state[m.k]; const today = num((L.meters||{})[m.k]);
+      const r = {today, prev:p.reading, usage:null, diff:null, month:null};
+      if(today!=null){
+        if(m.mode==='usage') r.usage = today;
+        else if(p.reading!=null) r.usage = r6(today - p.reading);
+        if(r.usage!=null && p.usage!=null) r.diff = r6(r.usage - p.usage);
+        if(r.usage!=null) r.month = r6((ym(p.date)===ym(d) ? (p.month||0) : 0) + r.usage);
+        state[m.k] = {reading: today, usage: r.usage, month: r.month!=null ? r.month : (ym(p.date)===ym(d)?p.month:null), date:d};
+      } else state[m.k] = {...p};
+      out.meters[m.k] = r;
+    });
+    res[d] = out;
+  });
+  return res;
+}
+function prevMonthly(k, date){
+  const m = ym(date); let best=null, bestD='';
+  for(const d in logs){ if(d!==date && ym(d)<m){ const v=num((logs[d].monthly||{})[k]); if(v!=null && d>bestD){best=v;bestD=d;} } }
+  return best!=null ? best : num((base.monthly||{})[k]);
+}
+function prevLogBefore(date){ let best=null; for(const d in logs){ if(d<date && (!best||d>best)) best=d; } return best; }
+
+/* ================= 저장소 (Supabase REST) =================
+   logs(date, data)  : 날짜별 일지 1건
+   config(key, data) : 시작 기준값(key='base')
+   서버에 못 보낸 입력은 이 기기(localStorage)에 보관했다가 연결되면 다시 보낸다. */
+const CFG = window.DUTY_CONFIG || {};
+const POLL_MS = 15000;
+let lastTs = null, pollTimer = null, baseJson = '';
+function setSync(kind, text){ $('syncDot').className='dot '+kind; $('syncText').textContent=text; }
+function configured(){ return !!(CFG.supabaseUrl && CFG.supabaseKey && !/YOUR_|여기에/.test(CFG.supabaseUrl + CFG.supabaseKey)); }
+function teamCode(){ return store.get('dutylog.team') || ''; }
+async function sb(path, opt){
+  opt = opt || {};
+  const headers = Object.assign({apikey: CFG.supabaseKey, Authorization: 'Bearer ' + CFG.supabaseKey, 'x-team-code': teamCode()}, opt.headers || {});
+  const r = await fetch(CFG.supabaseUrl.replace(/\/+$/,'') + '/rest/v1/' + path, Object.assign({}, opt, {headers, cache:'no-store'}));
+  if(!r.ok){ const e = new Error(await r.text().catch(()=>String(r.status))); e.status = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const upsert = (table, conflict, row) => sb(table + '?on_conflict=' + conflict, {method:'POST',
+  headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([row])});
+
+// 보내지 못한 입력 (날짜 → 일지)
+function pendingAll(){ try{ return JSON.parse(store.get('dutylog.pending') || '{}') || {}; }catch(e){ return {}; } }
+function setPending(date, data){ const p = pendingAll(); p[date] = data; store.set('dutylog.pending', JSON.stringify(p)); }
+function clearPending(date, stamp){ const p = pendingAll(); if(p[date] && p[date].updatedAt === stamp){ delete p[date]; store.set('dutylog.pending', JSON.stringify(p)); } }
+async function flushPending(){
+  const p = pendingAll(); let n = 0;
+  for(const d of Object.keys(p)){ await upsert('logs', 'date', {date:d, data:p[d]}); clearPending(d, p[d].updatedAt); n++; }
+  return n;
+}
+
+// 마지막으로 받은 기록 사본(최근 120일) — 오프라인으로 앱을 열어도 전일값 계산이 되도록
+function saveCache(){
+  const from = addDays(todayStr(), -120); const keep = {};
+  Object.keys(logs).forEach(d => { if(d >= from) keep[d] = logs[d]; });
+  store.set('dutylog.cache', JSON.stringify({logs:keep, base}));
+}
+function loadCache(){
+  try{ const c = JSON.parse(store.get('dutylog.cache') || 'null'); if(c){ logs = c.logs || {}; base = c.base || base; } }catch(e){}
+  const p = pendingAll(); for(const d in p){ logs[d] = Object.assign(emptyLog(d), p[d]); }
+}
+async function pull(full){
+  const rows = []; const since = (!full && lastTs) ? new Date(new Date(lastTs).getTime() - 60000).toISOString() : null;
+  for(let off = 0; ; off += 1000){
+    const page = await sb('logs?select=date,data,updated_at&order=date.asc&limit=1000&offset=' + off + (since ? '&updated_at=gte.' + encodeURIComponent(since) : ''));
+    rows.push(...page); if(page.length < 1000) break;
+  }
+  let changed = false;
+  if(full){ logs = {}; changed = true; }
+  rows.forEach(r => {
+    if(!lastTs || Date.parse(r.updated_at) > Date.parse(lastTs)) lastTs = r.updated_at;
+    const v = Object.assign(emptyLog(r.date), r.data || {});
+    const old = logs[r.date];
+    if(full || !old || JSON.stringify(old) !== JSON.stringify(v)){ logs[r.date] = v; changed = true; }
+  });
+  // 이 기기에만 있는 최신 입력이 서버 값보다 우선
+  const p = pendingAll(); for(const d in p){ logs[d] = Object.assign(emptyLog(d), p[d]); }
+  const cfg = await sb('config?select=key,data&key=eq.base');
+  const b = cfg && cfg[0] ? cfg[0].data : null; const bj = JSON.stringify(b);
+  if(bj !== baseJson){ baseJson = bj; base = b ? {meters:b.meters||{}, monthly:b.monthly||{}} : {meters:{}, monthly:{}}; renderBase(); changed = true; }
+  if(changed){ saveCache(); if(!dirty) loadDate(curDate, true); else { renderCalcs(); renderProg(); } renderHistory(); }
+}
+
+async function sync(full){
+  if(!configured()) return;
+  try{
+    const n = await flushPending();
+    await pull(full);
+    online = true;
+    setSync('on', (n ? '전송 완료 ' : '동기화됨 ') + new Date().toTimeString().slice(0,5));
+  }catch(e){
+    online = false;
+    if(e.status === 401 || e.status === 403){ setSync('off','팀 코드 확인 필요'); showGate('팀 코드가 맞지 않습니다.'); }
+    else setSync('off', Object.keys(pendingAll()).length ? '오프라인 · 기기에 보관 중' : '연결 안 됨');
+  }
+  renderMsgs();
+}
+
+async function connect(){
+  if(!configured()){ db = null; setSync('off','설정 필요'); renderMsgs(); return; }
+  db = {};
+  // 저장 전에 팀 코드를 먼저 확인 (틀리면 읽기 결과가 빈 목록으로 오기 때문)
+  try{
+    const ok = await sb('rpc/team_check', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if(ok === false){ showGate(teamCode() ? '팀 코드가 맞지 않습니다.' : ''); return; }
+  }catch(e){ online = false; setSync('off','연결 안 됨'); renderMsgs(); startPolling(); return; }
+  hideGate();
+  await sync(true);
+  startPolling();
+}
+function startPolling(){
+  clearInterval(pollTimer);
+  pollTimer = setInterval(() => { if(document.visibilityState === 'visible' && !dirty) sync(!online && !lastTs); }, POLL_MS);
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && db && !dirty) sync(!lastTs); });
+window.addEventListener('online', () => { if(db) sync(!lastTs); });
+
+function showGate(msg){ $('gate').hidden = false; $('gateMsg').textContent = msg || ''; setTimeout(() => $('gateInput').focus(), 50); }
+function hideGate(){ $('gate').hidden = true; }
+$('gateForm').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('gateInput').value.trim();
+  if(!/^[\x21-\x7e]{4,64}$/.test(v)){ $('gateMsg').textContent = '영문·숫자·기호 4자 이상으로 입력하세요.'; return; }
+  store.set('dutylog.team', v); $('gateMsg').textContent = '확인 중…'; connect();
+});
+
+function scheduleSave(){ dirty = true; setSync('busy','저장 중…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700); renderProg(); }
+async function saveNow(){
+  clearTimeout(saveTimer);
+  const data = JSON.parse(JSON.stringify(cur)); data.updatedAt = new Date().toISOString();
+  logs[cur.date] = data; dirty = false;
+  if(!db){ setSync('off','저장 안 됨 · 설정 필요'); return; }
+  setPending(cur.date, data);           // 먼저 기기에 보관
+  try{
+    await upsert('logs', 'date', {date:cur.date, data});
+    clearPending(cur.date, data.updatedAt); online = true;
+    setSync('on','저장됨 '+new Date().toTimeString().slice(0,5));
+  }catch(e){
+    online = false;
+    if(e.status === 401 || e.status === 403) setSync('off','저장 거부 · 팀 코드 확인');
+    else setSync('off','오프라인 · 기기에 보관 중');
+  }
+  renderMsgs();
+}
+
+/* 날씨 자동 입력 (Open-Meteo, 키 없음). 비어 있을 때만 채우고, 직접 고친 값은 건드리지 않는다. */
+const WX_CACHE = {};
+function wmo(c){
+  if(c == null) return '';
+  if(c <= 1) return '맑음'; if(c === 2) return '구름많음'; if(c === 3) return '흐림';
+  if(c === 45 || c === 48) return '안개';
+  if((c >= 71 && c <= 77) || c === 85 || c === 86) return '눈';
+  if(c >= 95) return '뇌우';
+  if(c >= 51) return '비';
+  return '';
+}
+async function autoWeather(date){
+  if(CFG.weather === false || !cur || cur.date !== date) return;
+  if(cur.weather || cur.tHi || cur.tLo) return;
+  const diff = (parseD(date) - parseD(todayStr())) / 864e5; if(diff > 7 || diff < -60) return;
+  const lat = CFG.lat ?? 37.5665, lon = CFG.lon ?? 126.978;
+  try{
+    if(!WX_CACHE[date]){
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&start_date=${date}&end_date=${date}`;
+      const r = await fetch(u); if(!r.ok) return; WX_CACHE[date] = await r.json();
+    }
+    const d = WX_CACHE[date].daily || {}; if(!cur || cur.date !== date || cur.weather || cur.tHi || cur.tLo) return;
+    const hi = d.temperature_2m_max && d.temperature_2m_max[0], lo = d.temperature_2m_min && d.temperature_2m_min[0];
+    cur.weather = wmo(d.weather_code && d.weather_code[0]);
+    cur.tHi = hi != null ? String(Math.round(hi)) : ''; cur.tLo = lo != null ? String(Math.round(lo)) : '';
+    ['weather','tHi','tLo'].forEach(k => $(k).value = cur[k]);
+    if(!$('p-sheet').hidden) renderSheet();
+  }catch(e){ /* 날씨는 없어도 일지 작성에 지장 없음 */ }
+}
+
+/* ================= 입력 폼 ================= */
+function loadDate(date, fromRemote){
+  curDate = date; $('date').value = date;
+  const dd = parseD(date); $('dateText').textContent = `${dd.getMonth()+1}월 ${dd.getDate()}일 ${WD[dd.getDay()]}요일` + (date===todayStr()?' · 오늘':'');
+  if(logs[date]) cur = applyDefaults(JSON.parse(JSON.stringify({...emptyLog(date), ...logs[date]})));
+  else {
+    cur = emptyLog(date);
+    const pd = prevLogBefore(date); const p = pd?logs[pd]:null;
+    if(p){ cur.run = {...(p.run||{})}; NUMS.filter(x=>x.carry).forEach(x => { if(p.patrol && p.patrol[x.k]!=null) cur.patrol[x.k]=p.patrol[x.k]; }); }
+    applyDefaults(cur);
+  }
+  if(fromRemote && document.activeElement && document.activeElement.closest('#p-input') && logs[date]){ renderCalcs(); renderMsgs(); renderProg(); return; }
+  fillForm(); renderCalcs(); renderMsgs(); renderProg();
+  $('monthlyBox').open = isMonthEnd(date) || MONTHLY.some(m => num(cur.monthly[m.k])!=null);
+  if(!$('p-sheet').hidden) renderSheet();
+  autoWeather(date);
+}
+function fillForm(){
+  ['weather','tHi','tLo','notes'].forEach(k => $(k).value = cur[k]??'');
+  METERS.forEach(m => $('m-'+m.k).value = (cur.meters[m.k]??''));
+  RUN.forEach(r => $('r-'+r.k).value = (cur.run[r.k]??''));
+  MONTHLY.forEach(m => $('mo-'+m.k).value = (cur.monthly[m.k]??''));
+  NUMS.forEach(it => { const el=$('pt-'+it.k); el.value = cur.patrol[it.k]??''; markRange(el,it); });
+  STATUS.forEach(syncSeg);
+}
+function syncSeg(it){
+  const v = cur.patrol[it.k];
+  document.querySelectorAll('[data-pk="'+it.k+'"]').forEach(btn => btn.setAttribute('aria-pressed', String(v===btn.dataset.v)));
+  $('st-'+it.k).classList.toggle('flag', !!(v && v!==it.ok));
+}
+function buildForm(){
+  $('meters').innerHTML = METERS.map(m => `
+    <div class="mrow">
+      <div class="top2"><label class="lb" for="m-${m.k}">${m.label}${m.sub?`<small>${m.sub}</small>`:''}</label>
+        <span class="inp"><input id="m-${m.k}" inputmode="decimal" autocomplete="off" placeholder="입력"></span></div>
+      <div class="res" id="res-${m.k}"></div>
+      <div class="err" id="err-${m.k}" hidden></div>
+    </div>`).join('');
+  $('nums').innerHTML = NUMS.map(it => `
+    <div class="row"><label class="lb" for="pt-${it.k}">${esc(it.short||it.l)}${it.hint?`<small>기준 ${esc(it.hint)}</small>`:''}</label>
+      <span class="inp"><input id="pt-${it.k}" inputmode="${it.u==='병'?'numeric':'decimal'}" autocomplete="off"><span class="u">${it.u||''}</span></span></div>`).join('');
+  $('status').innerHTML = STATUS.map(it => `
+    <div class="row" id="st-${it.k}"><span class="lb">${esc(it.box)}<small>${esc(it.l)}</small></span>
+      <span class="seg" role="group" aria-label="${esc(it.box)} ${esc(it.l)}">${it.o.map(o=>`<button type="button" data-pk="${it.k}" data-v="${o}" class="${o!==it.ok?'abn':''}" aria-pressed="false">${o}</button>`).join('')}</span></div>`).join('');
+  $('run').innerHTML = RUN.map(r => `<label class="fld">${r.label}<input id="r-${r.k}" placeholder="${r.def}"></label>`).join('');
+  $('monthly').innerHTML = MONTHLY.map(m => `
+    <div class="row"><label class="lb" for="mo-${m.k}">${m.label}<small class="mm" id="mos-${m.k}"></small></label>
+      <span class="inp"><input id="mo-${m.k}" inputmode="decimal" autocomplete="off"><span class="u">${m.unit}</span></span></div>`).join('');
+
+  ['weather','tHi','tLo','notes'].forEach(k => $(k).addEventListener('input', e => { cur[k]=e.target.value; if(k==='worker') store.set('dutylog.worker', e.target.value); scheduleSave(); }));
+  METERS.forEach(m => $('m-'+m.k).addEventListener('input', e => { cur.meters[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
+  RUN.forEach(r => $('r-'+r.k).addEventListener('input', e => { cur.run[r.k]=e.target.value; scheduleSave(); }));
+  MONTHLY.forEach(m => $('mo-'+m.k).addEventListener('input', e => { cur.monthly[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
+  NUMS.forEach(it => { const el=$('pt-'+it.k); el.addEventListener('input', e => { cur.patrol[it.k]=e.target.value.trim(); markRange(el,it); scheduleSave(); }); });
+  $('status').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-pk]'); if(!btn) return;
+    const it = STATUS.find(x => x.k===btn.dataset.pk); cur.patrol[it.k] = btn.dataset.v; syncSeg(it); scheduleSave();
+  });
+}
+function markRange(el,it){ const v=num(el.value); el.classList.toggle('out', !!(it.r && v!=null && (v<it.r[0]||v>it.r[1]))); }
+
+function renderCalcs(){
+  if(!cur) return;
+  const res = computeAll(cur)[cur.date]; if(!res) return;
+  METERS.forEach(m => {
+    const r = res.meters[m.k]; const f = x => x!=null?fmt(x,m.dec):'-';
+    $('res-'+m.k).innerHTML = `<span>전일<b>${f(r.prev)}</b></span><span>사용<b>${f(r.usage)}</b></span><span>증감<b class="${r.diff<0?'neg':''}">${f(r.diff)}</b></span><span>월누계<b>${f(r.month)}</b></span>`;
+    const er=$('err-'+m.k); let t='', w=false;
+    if(r.today!=null && r.prev==null){ t='전일 값이 없습니다. 기록 탭 > 시작 기준값에 입력하세요.'; w=true; }
+    er.hidden=!t; er.textContent=t; er.className='err'+(w?' warn':'');
+  });
+  MONTHLY.forEach(m => {
+    const pv = prevMonthly(m.k, cur.date), cv = num(cur.monthly[m.k]);
+    $('mos-'+m.k).textContent = '전월 '+(pv!=null?fmt(pv,m.dec):'-') + (cv!=null&&pv!=null?' · 사용 '+fmt(cv-pv,m.dec):'');
+  });
+}
+function renderProg(){
+  if(!cur) return;
+  const mN = METERS.filter(m => num(cur.meters[m.k])!=null).length;
+  const nN = NUMS.filter(it => num(cur.patrol[it.k])!=null).length;
+  const bad = STATUS.filter(it => cur.patrol[it.k] && cur.patrol[it.k]!==it.ok).length
+            + NUMS.filter(it => it.r && num(cur.patrol[it.k])!=null && (num(cur.patrol[it.k])<it.r[0]||num(cur.patrol[it.k])>it.r[1])).length;
+  $('prog').innerHTML = `<b>검침 ${mN}/${METERS.length} · 측정 ${nN}/${NUMS.length}</b><span>${bad?`<span style="color:var(--bad)">이상 ${bad}건</span>`:'이상 없음'}</span>`;
+}
+function renderMsgs(){
+  const out=[];
+  if(!db) out.push(`<div class="banner bad">config.js에 Supabase 주소와 키가 없어 입력값이 저장되지 않습니다.</div>`);
+  else if(!online){ const n = Object.keys(pendingAll()).length; out.push(`<div class="banner warn">서버에 연결되지 않았습니다.${n ? ` 입력값 ${n}일치는 이 기기에 보관 중이며, 연결되면 자동 전송됩니다.` : ''}</div>`); }
+  const pd = prevLogBefore(curDate);
+  if(pd && pd!==addDays(curDate,-1)) out.push(`<div class="banner warn">전날 기록이 없어 마지막 기록(${pd.slice(5).replace('-','/')}) 값을 전일 검침으로 씁니다.</div>`);
+  if(!pd && !METERS.some(m => num(((base.meters||{})[m.k]||{}).reading)!=null))
+    out.push(`<div class="banner info">첫 사용입니다. <b>기록</b> 탭 › 시작 기준값에 전날 종이 일지 값을 한 번 넣어 주세요.</div>`);
+  $('msgs').innerHTML = out.join(''); $('msgs').hidden = !out.length;
+}
+
+/* ================= A4 시트 ================= */
+function sheetHTML(){
+  const res = computeAll(cur)[cur.date]; const d = parseD(cur.date);
+  const P = cur.patrol||{};
+  const sel = (k,opts) => opts.map(o=>`<span class="o${P[k]===o?' sel':''}">${esc(o)}</span>`).join(' / ');
+  const val = (k) => `<span class="v">${esc(P[k]??'')}</span>`;
+  const mrow = (m, labelCells) => { const r=res.meters[m.k]; return `<tr class="en">${labelCells}<td class="n t0" colspan="3">${fmt(r.today,m.dec)}</td><td class="n" colspan="3">${fmt(r.prev,m.dec)}</td><td class="n t1" colspan="3">${fmt(r.diff,m.dec)}</td><td class="n" colspan="3">${fmt(r.usage,m.dec)}</td><td class="n" colspan="3">${fmt(r.month,m.dec)}</td></tr>`; };
+  const M = Object.fromEntries(METERS.map(m=>[m.k,m]));
+  const run = cur.run||{};
+  const box = (b) => b.items.map(it => it.n
+    ? `<div class="it${['tankWater','tankFire','labWaste','mgPress'].includes(it.k)?' ctr':''}"><span class="lab">${esc(it.l)} :</span><span class="val">${esc(P[it.k]??'')}<i>${it.u||''}</i></span></div>`
+    : `<div class="it"><span class="lab">${esc(it.l)} :</span><span class="opts">${it.o.map(o=>`<span class="o${P[it.k]===o?' sel':''}">${esc(o)}</span>`).join('')}</span></div>`).join('') + (b.mg?`<span class="mgg"><span>실병: <b>${esc(P.mgFull??'')}</b></span><span>공병: <b>${esc(P.mgEmpty??'')}</b></span><span>사용중: <b>${esc(P.mgUse??'')}</b></span></span>`:'');
+  const prow = (arr) => `<tr>${arr.map(b=>`<td class="h" colspan="5">${esc(b.t)}</td>`).join('')}</tr><tr>${arr.map(b=>`<td class="b" colspan="5" style="height:61px">${box(b)}</td>`).join('')}</tr>`;
+  const mon = MONTHLY.map(m => ({m, cur:num(cur.monthly[m.k]), prev:prevMonthly(m.k,cur.date)}));
+  return `
+  <div class="sheet">
+    <div class="sh-head">
+      <div class="sh-title">당 직 일 지 (시설)</div>
+      <table class="appr"><tr><td class="k" rowspan="2">결<br><br>재</td><td>근무자</td><td>담당</td><td>부서장</td></tr>
+        <tr><td class="sig"></td><td class="sig"></td><td class="sig"></td></tr></table>
+    </div>
+    <div class="sh-date"><span>${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일</span>
+      <span>날씨: <b>${esc(cur.weather)}</b> &nbsp; 기온: 최고 <b>${esc(cur.tHi)}</b> ℃, 최저 <b>${esc(cur.tLo)}</b> ℃</span></div>
+    <table>
+      <colgroup>${'<col>'.repeat(19)}</colgroup>
+      <tr><td class="sh-sec" colspan="19">에너지 사용 현황</td></tr>
+      <tr><td class="sh-col" colspan="4">구 분</td><td class="sh-col" colspan="3">금일 검침</td><td class="sh-col" colspan="3">전일 검침</td><td class="sh-col" colspan="3">전일대비 증감</td><td class="sh-col" colspan="3">사용량</td><td class="sh-col" colspan="3">월 누계</td></tr>
+      ${mrow(M.elec, `<td class="l" colspan="4">전 력<br>(사용량)</td>`)}
+      ${mrow(M.heat, `<td class="l" colspan="2" rowspan="2">지역<br>냉난방</td><td class="l" colspan="2">난방/급탕</td>`)}
+      ${mrow(M.cool, `<td class="l" colspan="2">냉방</td>`)}
+      ${mrow(M.water, `<td class="l" colspan="4">수 도</td>`)}
+      ${mrow(M.gas, `<td class="l" colspan="4">도시 가스(식당)</td>`)}
+      ${mrow(M.drain, `<td class="l" colspan="4">주차장 영구배수</td>`)}
+      <tr class="en"><td class="l" colspan="4" style="height:40px">가동 시간</td><td colspan="15" class="run">
+        <span>FCU 난방 : ${esc(run.fcu)}</span><span>바닥 난방 : ${esc(run.floor)}</span><span>급탕 : ${esc(run.hot)}</span><span>냉방 : ${esc(run.cool)}</span></td></tr>
+    </table>
+    <table class="pt" style="margin-top:-1px">
+      <colgroup>${'<col>'.repeat(20)}</colgroup>
+      <tr><td class="sh-sec" colspan="20">순찰 점검 사항</td></tr>
+      ${prow(PATROL.slice(0,4))}
+      ${prow(PATROL.slice(4,8))}
+      ${prow(PATROL.slice(8,12))}
+      <tr><td class="h" colspan="5" style="height:56px">5층 통신실</td><td class="b" colspan="5">${box(PATROL[12])}</td><td class="h" colspan="5">UPS실</td><td class="b" colspan="5">${box(PATROL[13])}</td></tr>
+    </table>
+    <table class="mt" style="margin-top:-1px">
+      <colgroup><col style="width:70px">${MONTHLY.map(()=>'<col>').join('')}<col style="width:64px"></colgroup>
+      <tr><td></td>${MONTHLY.map(m=>`<td class="hd">${esc(m.label)}</td>`).join('')}<td class="hd">비고</td></tr>
+      <tr><td class="hd">금월 검침</td>${mon.map(x=>`<td class="n">${fmt(x.cur,x.m.dec)} <span style="font-size:8.5px;color:#555">${x.m.unit}</span></td>`).join('')}<td rowspan="3" class="hd">매월 말일<br>* 검침 *</td></tr>
+      <tr><td class="hd">전월 검침</td>${mon.map(x=>`<td class="n">${fmt(x.prev,x.m.dec)}</td>`).join('')}</tr>
+      <tr><td class="hd">월 사용량</td>${mon.map(x=>`<td class="n">${x.cur!=null&&x.prev!=null?fmt(x.cur-x.prev,x.m.dec):''} <span style="font-size:8.5px;color:#555">${x.m.unit}</span></td>`).join('')}</tr>
+    </table>
+    <table class="nt" style="margin-top:-1px"><tr><td class="l">특이사항</td><td class="b">${esc(cur.notes)}</td></tr></table>
+    <div class="foot">${res.fromBase?'전일 검침: 시작 기준값 사용':''}</div>
+  </div>`;
+}
+function renderSheet(){
+  $('scaler').innerHTML = sheetHTML();
+  fitPreview();
+}
+function fitPreview(){
+  const pv=$('preview'), sc=$('scaler'); const w = pv.clientWidth || 360; const s = Math.min(1, w/794);
+  sc.style.transform = `scale(${s})`; pv.style.height = (sc.firstElementChild ? sc.firstElementChild.offsetHeight*s : 1123*s)+'px';
+}
+window.addEventListener('resize', () => { if(!$('p-sheet').hidden) fitPreview(); });
+
+
+/* ================= 파일 저장 / 출력 ================= */
+const LOADED = {};
+function loadScript(src){
+  return LOADED[src] || (LOADED[src] = new Promise((ok, no) => {
+    const el = document.createElement('script'); el.src = src; el.onload = ok;
+    el.onerror = () => { delete LOADED[src]; no(new Error('load ' + src)); }; document.head.appendChild(el);
+  }));
+}
+function downloadBlob(blob, name){
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function printSheet(){
+  if(dirty) await saveNow();
+  $('printArea').innerHTML = sheetHTML();
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  window.print();
+}
+window.addEventListener('afterprint', () => { $('printArea').innerHTML = ''; });
+
+async function savePdf(){
+  const btn=$('pdfBtn'), msg=$('pdfMsg'); btn.disabled=true; msg.textContent='PDF 만드는 중…';
+  try{
+    if(dirty) await saveNow();
+    await Promise.all([loadScript('vendor/html2canvas.min.js'), loadScript('vendor/jspdf.umd.min.js')]);
+    const host=$('capture'); host.innerHTML = sheetHTML(); const el = host.firstElementChild;
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+    host.innerHTML='';
+    const pdf = new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+    const ratio = canvas.height/canvas.width; let w=210, h=210*ratio; if(h>297){ h=297; w=297/ratio; }
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',(210-w)/2,0,w,h);
+    downloadBlob(pdf.output('blob'), `당직일지_${cur.date}.pdf`);
+    msg.textContent='PDF를 내려받았습니다.';
+  }catch(e){
+    $('capture').innerHTML='';
+    msg.textContent = 'PDF 저장에 실패했습니다. 다시 시도해 주세요.';
+  }finally{ btn.disabled=false; }
+}
+
+
+/* ================= 엑셀 저장 ================= */
+/* 엑셀 양식(당직일지 시트)에 하루치 값을 채운다. D = 화면 상태에서 만든 입력 묶음 */
+function fillWorkbook(wb, D){
+  const ws = wb.getWorksheet('당직일지') || wb.worksheets[0];
+  const nf = dec => dec > 0 ? '0.' + '0'.repeat(dec) : '0';
+  const s = v => (v === undefined || v === null) ? '' : String(v);
+  const blank = v => v === '' || v === undefined || v === null;
+  const OPTS = D.opts || {};
+  // 서식 객체는 칸끼리 공유되므로, 칸마다 복사본을 만들어 지정한다
+  const style = (addr, patch) => { const c = ws.getCell(addr); c.style = Object.assign({}, c.style, patch); return c; };
+  const put = (addr, v, fmt) => { const c = ws.getCell(addr); c.value = blank(v) ? null : v; if(fmt) style(addr, {numFmt: fmt}); };
+  const fit = addr => { const c = ws.getCell(addr); style(addr, {alignment: Object.assign({}, c.alignment, {shrinkToFit:true})}); };
+  const center = addr => { const c = ws.getCell(addr); style(addr, {alignment: Object.assign({}, c.alignment, {horizontal:'center'})}); };
+
+  // 글자 모양: 0 = 라벨(작게), 1 = 입력값(크고 굵게), 2 = 선택하지 않은 항목(작은 회색)
+  const LAB = 10, VAL = 14, DIM_COLOR = {argb: 'FF9A9A9A'};
+  const fontOf = (addr, kind) => {
+    const f = ws.getCell(addr).font || {};
+    const base = {name: f.name || '맑은 고딕', family: f.family, charset: f.charset, scheme: f.scheme};
+    if(kind === 1) return Object.assign(base, {size: VAL, bold: true});
+    if(kind === 2) return Object.assign(base, {size: LAB, color: DIM_COLOR});
+    return Object.assign(base, {size: LAB});
+  };
+  // 내용이 빈 글자 조각은 엑셀이 칸 전체 서식을 버리는 원인이 되므로 넣지 않는다
+  const rich = (addr, parts) => {
+    const c = ws.getCell(addr);
+    const runs = parts.filter(p => p[0] !== '');
+    if(!runs.length){ c.value = null; return; }
+    if(runs.length === 1){ c.value = runs[0][0]; style(addr, {font: fontOf(addr, runs[0][1])}); return; }
+    c.value = { richText: runs.map(p => ({ text: p[0], font: fontOf(addr, p[1]) })) };
+  };
+  // 라벨 + 값 (+ 단위)
+  const lv = (addr, label, value, suffix) => rich(addr, blank(value) ? [[label + (suffix || ''), 0]] : [[label, 0], [s(value), 1], [suffix || '', 0]]);
+  // 라벨 + 선택지 전체(고른 것만 굵게, 나머지는 작은 회색) — 앱의 일지와 같은 표시
+  const opt = (addr, label, key, cur, pre) => {
+    const parts = [[label, 0]];
+    (OPTS[key] || []).forEach((o, i) => { if(i) parts.push([' / ', 2]); parts.push([o, o === cur ? 1 : 2]); });
+    if(!(OPTS[key] || []).length) parts.push([s(cur), 1]);
+    rich(addr, parts);
+  };
+
+  // 우측 검침값 계산기 영역(W열 이후): 병합 해제, 값과 서식 모두 삭제
+  Object.keys(ws._merges).forEach(key => {
+    const m = ws._merges[key].model;
+    if(m.left >= 23) ws.unMergeCells(m.top, m.left, m.bottom, m.right);
+  });
+  ws.eachRow({includeEmpty:true}, row => row.eachCell({includeEmpty:true}, cell => {
+    if(cell.col >= 23){ cell.value = null; cell.style = {}; }
+  }));
+  for(let c = 23; c <= 29; c++) ws.getColumn(c).width = 8.43;
+
+  // 날짜, 날씨
+  put('B6', D.dateText);
+  put('J6', '날씨: ' + s(D.weather) + '      기온: 최고 ' + s(D.tHi) + ' ℃,  최저 ' + s(D.tLo) + ' ℃');
+
+  // 에너지 사용 현황: 금일(굵게 14) / 전일·사용량·월누계(12) / 전일대비 증감(12 굵게)
+  const ROWS = {elec:9, heat:11, cool:13, water:15, gas:17, drain:18};
+  const COLS = {today:'F', prev:'I', diff:'L', usage:'O', month:'R'};
+  for(const k in ROWS){
+    const r = D.meters[k]; const f = nf(r.dec);
+    for(const key in COLS){
+      const addr = COLS[key] + ROWS[k]; put(addr, r[key], f);
+      const c = ws.getCell(addr);
+      if(key === 'today') style(addr, {font: Object.assign({}, c.font, {bold: true, size: 14})});
+      else if(key === 'diff') style(addr, {font: Object.assign({}, c.font, {bold: true, size: 12})});
+      else style(addr, {font: Object.assign({}, c.font, {size: 12})});
+    }
+  }
+
+  // 가동 시간
+  put('G19', 'FCU 난방 :  ' + s(D.run.fcu) + '\n바닥 난방 :  ' + s(D.run.floor));
+  put('L19', '급탕 :  ' + s(D.run.hot));
+  put('Q19', '냉방 : ' + s(D.run.cool));
+
+  // 순찰 점검
+  const P = D.patrol;
+  opt('B23', '냉각탑 수위 : ', 'ctLevel', P.ctLevel);
+  opt('B24', '냉각탑 이상 소음 : ', 'ctNoise', P.ctNoise);
+  opt('G23', '', 'lights', P.lights);
+  lv('P23', '', P.fridge);
+  lv('P24', '', P.freezer);
+  opt('Q23', ' 가스 : ', 'kGas', P.kGas);
+  opt('Q24', ' 수도 : ', 'kWater', P.kWater);
+  lv('D27', '', P.tankWater, ' %');
+  lv('I27', '', P.tankFire, ' %');
+  lv('N27', '', P.labWaste, ' %');
+  lv('T27', '', P.mgPress, ' ㎫');
+  rich('Q28', [[' 실병: ', 0], [s(P.mgFull), 1], ['   공병: ', 0], [s(P.mgEmpty), 1], ['   사용중: ', 0], [s(P.mgUse), 1]]);
+  opt('B31', '작동 여부 : ', 'pParking', P.pParking);
+  opt('G31', '작동 여부 : ', 'pMech', P.pMech);
+  opt('L31', '펌프 상태 : ', 'pSeptic', P.pSeptic);
+  opt('Q31', '가동 상태 : ', 'pBooster', P.pBooster);
+  rich('G33', [['실내온도:  ', 0], [s(P.commTemp), 1], [' ℃\n에어컨 누수여부:  ', 0]].concat(
+    (OPTS.commLeak || []).reduce((a, o, i) => { if(i) a.push([' / ', 2]); a.push([o, o === P.commLeak ? 1 : 2]); return a; }, [])));
+  opt('Q33', '가동 상태 : ', 'ups', P.ups);
+  ['B23','B24','G23','P23','P24','Q23','Q24','D27','I27','N27','T27','Q28','B31','G31','L31','Q31','G33','Q33'].forEach(fit);
+  // 수위 값은 칸 가운데에 놓는다
+  ['D27','I27','N27'].forEach(center);
+
+  // 월말 검침 (금월 / 전월 / 월 사용량)
+  const MC = {hot101:'D', water101:'F', hvac12:'H', hot203:'K', water203:'M', p2lc:'O', hvac3:'Q'};
+  D.monthly.forEach(m => {
+    const c = MC[m.k]; const f = nf(m.dec) + ' "' + m.unit + '"';
+    // 값이 없는 칸은 원래 양식처럼 단위만 남긴다
+    put(c + '36', m.cur != null ? m.cur : m.unit, f);
+    put(c + '37', m.prev, f);
+    put(c + '38', (m.cur != null && m.prev != null) ? Math.round((m.cur - m.prev) * 1e6) / 1e6 : m.unit, f);
+    ['36','37','38'].forEach(r => fit(c + r));
+  });
+  ['B36','B37','B38'].forEach(fit);
+
+  // 특이사항
+  put('F39', s(D.notes));
+
+  // 인쇄 영역: 행 앞의 $ 를 직접 붙여야 ExcelJS가 올바른 이름으로 저장한다
+  ws.pageSetup.printArea = 'B$1:U$43';
+  return wb;
+}
+
+async function saveXlsx(){
+  const btn=$('xlsBtn'), msg=$('pdfMsg'); btn.disabled=true; msg.textContent='엑셀 만드는 중…';
+  try{
+    if(dirty) await saveNow();
+    await loadScript('vendor/exceljs.min.js');
+    const res = computeAll(cur)[cur.date]; const dd = parseD(cur.date);
+    const meters = {}; METERS.forEach(m => { const r=res.meters[m.k]; meters[m.k] = {today:r.today, prev:r.prev, diff:r.diff, usage:r.usage, month:r.month, dec:m.dec}; });
+    const D = {
+      dateText: `${dd.getFullYear()}년 ${dd.getMonth()+1}월 ${dd.getDate()}일 ${WD[dd.getDay()]}요일`,
+      weather: cur.weather, tHi: cur.tHi, tLo: cur.tLo, meters, run: cur.run, patrol: cur.patrol, notes: cur.notes,
+      opts: Object.fromEntries(STATUS.map(it => [it.k, it.o])),
+      monthly: MONTHLY.map(m => ({k:m.k, unit:m.unit, dec:m.dec, cur:num(cur.monthly[m.k]), prev:prevMonthly(m.k, cur.date)}))
+    };
+    const tr = await fetch('template.xlsx', {cache:'no-cache'}); if(!tr.ok) throw new Error('template');
+    const wb = new window.ExcelJS.Workbook(); await wb.xlsx.load(await tr.arrayBuffer());
+    fillWorkbook(wb, D);
+    const buf = await wb.xlsx.writeBuffer();
+    downloadBlob(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), `당직일지_${cur.date}.xlsx`);
+    msg.textContent='엑셀을 내려받았습니다.';
+  }catch(e){
+    msg.textContent = '엑셀 저장에 실패했습니다. 다시 시도해 주세요.';
+  }finally{ btn.disabled=false; }
+}
+
+/* ================= 기록 / 기준값 ================= */
+function renderHistory(){
+  const ds = Object.keys(logs).sort().reverse().slice(0,40);
+  if(!ds.length){ $('history').innerHTML = `<div class="empty">아직 저장된 일지가 없습니다.<br>입력 탭에서 값을 넣으면 날짜별로 자동 저장됩니다.</div>`; return; }
+  $('history').innerHTML = ds.map(d => { const L=logs[d]; const n=METERS.filter(m=>num((L.meters||{})[m.k])!=null).length; const dd=parseD(d);
+    return `<button type="button" data-d="${d}"><span><b>${dd.getMonth()+1}/${dd.getDate()}</b> ${WD[dd.getDay()]} · ${L.updatedAt?'저장 '+new Date(L.updatedAt).toTimeString().slice(0,5):''}</span><span class="st">검침 ${n}/${METERS.length}</span></button>`; }).join('');
+}
+$('history').addEventListener('click', e => { const b=e.target.closest('button[data-d]'); if(!b) return; go(b.dataset.d); showTab('input'); });
+
+function renderBase(){
+  $('baseMeters').innerHTML = METERS.map(m => { const b=(base.meters||{})[m.k]||{};
+    return `<div style="padding:12px 14px 0;font-weight:600;font-size:14px">${m.group?esc(m.group)+' ':''}${m.label}</div>
+    <div class="grid4" style="grid-template-columns:repeat(3,1fr);padding-top:6px">
+      <label class="fld">${m.mode==='usage'?'전일 사용량':'전일 검침'}<input id="b-r-${m.k}" inputmode="decimal" value="${esc(b.reading??'')}"></label>
+      ${m.mode==='usage'?'<span></span>':`<label class="fld">전일 사용량<input id="b-u-${m.k}" inputmode="decimal" value="${esc(b.usage??'')}"></label>`}
+      <label class="fld">전일 월누계<input id="b-m-${m.k}" inputmode="decimal" value="${esc(b.month??'')}"></label></div>`; }).join('');
+  $('baseMonthly').innerHTML = `<div style="padding:14px 14px 0;font-weight:600;font-size:14px">전월 말일 검침</div><div class="grid4" style="grid-template-columns:repeat(2,1fr);padding-top:6px">` +
+    MONTHLY.map(m => `<label class="fld">${m.label} (${m.unit})<input id="bm-${m.k}" inputmode="decimal" value="${esc((base.monthly||{})[m.k]??'')}"></label>`).join('') + `</div>`;
+}
+$('saveBase').addEventListener('click', async () => {
+  const meters={}; METERS.forEach(m => { const r=$('b-r-'+m.k).value.trim(); meters[m.k] = {reading:r, usage: m.mode==='usage'? r : $('b-u-'+m.k).value.trim(), month:$('b-m-'+m.k).value.trim()}; });
+  const monthly={}; MONTHLY.forEach(m => monthly[m.k] = $('bm-'+m.k).value.trim());
+  base = {meters, monthly}; renderCalcs(); renderMsgs();
+  if(!db){ $('baseMsg').textContent='저장소 설정이 없어 이 화면에만 적용됩니다.'; return; }
+  const data = {meters, monthly, updatedAt:new Date().toISOString()};
+  try{ await upsert('config', 'key', {key:'base', data}); baseJson = JSON.stringify(data); $('baseMsg').textContent='저장했습니다.'; }
+  catch(e){ $('baseMsg').textContent = (e.status===401||e.status===403) ? '저장 거부 · 팀 코드를 확인하세요.' : '저장 실패 · 인터넷 연결을 확인하세요.'; }
+});
+
+/* ================= 탭 / 날짜 ================= */
+let tab = 'input';
+function showTab(t){
+  tab = t;
+  ['input','sheet','base'].forEach(x => { $('p-'+x).hidden = x!==t; $('tab-'+x).setAttribute('aria-selected', String(x===t)); });
+  $('bar').hidden = t==='base';
+  $('barBtn').textContent = t==='sheet' ? '출력' : '일지 보기';
+  $('xlsBtn').hidden = t!=='sheet'; $('pdfBtn').hidden = t!=='sheet'; $('prog').hidden = t==='sheet'; $('bar').classList.toggle('onsheet', t==='sheet');
+  if(t==='sheet') requestAnimationFrame(renderSheet);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+$('barBtn').addEventListener('click', () => tab==='sheet' ? printSheet() : showTab('sheet'));
+$('xlsBtn').addEventListener('click', saveXlsx);
+$('pdfBtn').addEventListener('click', savePdf);
+
+/* ================= 백업 ================= */
+$('exportBtn').addEventListener('click', async () => {
+  if(dirty) await saveNow();
+  const out = {app:'dutylog', version:1, exportedAt:new Date().toISOString(), base, logs};
+  downloadBlob(new Blob([JSON.stringify(out, null, 1)], {type:'application/json'}), `당직일지_백업_${todayStr()}.json`);
+  $('toolMsg').textContent = `${Object.keys(logs).length}일치를 백업 파일로 내려받았습니다.`;
+});
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if(!f) return;
+  let j; try{ j = JSON.parse(await f.text()); }catch(err){ $('toolMsg').textContent = '백업 파일을 읽지 못했습니다.'; return; }
+  if(!j || j.app !== 'dutylog' || typeof j.logs !== 'object'){ $('toolMsg').textContent = '당직일지 백업 파일이 아닙니다.'; return; }
+  const ds = Object.keys(j.logs).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  if(!confirm(`${ds.length}일치(${ds[0]||''} ~ ${ds[ds.length-1]||''})를 서버에 덮어씁니다. 계속할까요?`)) return;
+  if(!db){ $('toolMsg').textContent = '저장소 설정이 없습니다.'; return; }
+  let n = 0;
+  try{
+    for(const d of ds){ await upsert('logs', 'date', {date:d, data:Object.assign({}, j.logs[d], {date:d})}); n++; $('toolMsg').textContent = `불러오는 중… ${n}/${ds.length}`; }
+    if(j.base && (j.base.meters || j.base.monthly)) await upsert('config', 'key', {key:'base', data:Object.assign({}, j.base, {updatedAt:new Date().toISOString()})});
+    $('toolMsg').textContent = `${n}일치를 불러왔습니다.`;
+    await sync(true);
+  }catch(err){ $('toolMsg').textContent = `${n}일치까지 불러온 뒤 실패했습니다. 다시 시도하면 이어서 덮어씁니다.`; }
+});
+$('forgetTeam').addEventListener('click', () => { store.set('dutylog.team', ''); store.set('dutylog.cache', ''); location.reload(); });
+async function go(d){ if(dirty) await saveNow(); loadDate(d); }
+$('prevDay').addEventListener('click', () => go(addDays(curDate,-1)));
+$('nextDay').addEventListener('click', () => go(addDays(curDate,1)));
+$('date').addEventListener('change', e => { if(e.target.value) go(e.target.value); });
+
+// 앱을 닫거나 다른 앱으로 넘어갈 때 대기 중인 입력을 즉시 저장
+document.addEventListener('visibilitychange', () => { if(document.visibilityState==='hidden' && dirty) saveNow(); });
+window.addEventListener('pagehide', () => { if(dirty) saveNow(); });
+
+loadCache(); buildForm(); renderBase(); renderHistory(); loadDate(curDate); connect();
+})();
+</script>
+</body>
+</html>
