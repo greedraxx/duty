@@ -88,6 +88,21 @@ main{padding-block:12px 60px}
 .gatebox input{height:48px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;font-size:18px;background:var(--surface)}
 .gatebox input:focus{outline:none;border-color:var(--ink)}
 .err{color:var(--bad)}
+.viewer{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.vbar{display:flex;align-items:center;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.vbar .vt{flex:1;min-width:0;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtabs{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;border-bottom:1px solid var(--line)}
+.vtabs .chip{white-space:nowrap}
+.vbody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+.vbody img{display:block;max-width:100%;margin:0 auto}
+.vbody pre{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.vbody iframe{width:100%;height:100%;border:0;background:#fff}
+.vbody .vmsg{padding:30px 16px;color:var(--muted);text-align:center}
+table.xl{border-collapse:collapse;font-size:13px;min-width:100%}
+table.xl td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;white-space:pre-wrap;min-width:48px;max-width:260px;word-break:break-word}
+table.xl tr:first-child td{font-weight:700;background:var(--soft);position:sticky;top:0}
+table.xl a{color:inherit;font-weight:700}
+.vnote{font-size:12px;color:var(--muted);padding:8px 12px}
 </style>
 </head>
 <body>
@@ -144,6 +159,11 @@ main{padding-block:12px 60px}
   <button type="button" class="toggle" id="showHidden" hidden></button>
 </div></main>
 
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="서류 보기">
+  <div class="vbar"><div class="vt" id="vTitle"></div><button type="button" class="btn small" id="vSave">내려받기</button><button type="button" class="btn small" id="vClose">닫기</button></div>
+  <div class="vtabs" id="vTabs" hidden></div>
+  <div class="vbody" id="vBody"></div>
+</div>
 <div class="gate" id="gate" hidden>
   <form class="gatebox" id="gateForm">
     <h2>시설팀 서류</h2>
@@ -161,7 +181,6 @@ const $ = id => document.getElementById(id);
 const MAX_BYTES = 25 * 1024 * 1024;
 const CHUNK_BYTES = 510 * 1024;            // 원본 조각 크기 (base64 로 약 680KB)
 const DEFAULT_CATS = ['소방', '전기', '기계', '건축', '계약', '법정점검', '연락처', '기타'];
-const OPEN_IN_TAB = /^(application\/pdf|image\/(png|jpe?g|gif|webp)|text\/plain)$/;
 let docs = [], showHidden = false, activeCat = '', editId = null, loaded = false;
 
 const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
@@ -228,8 +247,8 @@ function render(){
       <div class="meta">${esc(d.file_name)} · ${fmtSize(d.size)} · ${fmtDate(d.created_at)}${d.hidden ? ' · 숨김' : ''}</div>
       ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
       <div class="acts">
-        <button type="button" class="btn small" data-a="open">${OPEN_IN_TAB.test(d.mime) ? '열기' : '내려받기'}</button>
-        ${OPEN_IN_TAB.test(d.mime) ? '<button type="button" class="btn small" data-a="save">내려받기</button>' : ''}
+        ${kindOf(d) === 'other' ? '' : '<button type="button" class="btn small primary" data-a="open">열람</button>'}
+        <button type="button" class="btn small" data-a="save">내려받기</button>
         <button type="button" class="btn small" data-a="edit">수정</button>
         <button type="button" class="btn small" data-a="hide">${d.hidden ? '복원' : '숨김'}</button>
       </div>
@@ -258,21 +277,92 @@ function saveBlob(blob, name){
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
+const ext = d => (d.file_name.split('.').pop() || '').toLowerCase();
+function kindOf(d){
+  const e = ext(d), m = d.mime || '';
+  if(e === 'pdf' || m === 'application/pdf') return 'pdf';
+  if(/^image\/(png|jpe?g|gif|webp|bmp)$/.test(m) || /^(png|jpe?g|gif|webp|bmp)$/.test(e)) return 'image';
+  if(e === 'xlsx' || e === 'xlsm') return 'xlsx';
+  if(e === 'docx') return 'docx';
+  if(m === 'text/plain' || e === 'txt' || e === 'csv') return 'text';
+  return 'other';   // hwp, xls, pptx 등: 내려받기만
+}
+/* 한 번 열어 본 서류는 기기에 보관 → 다음부터 즉시 열림 (서류는 수정되지 않고 id 고정) */
+async function getBlob(d){
+  const key = '/doc/' + d.id;
+  try{ if(window.caches){ const c = await caches.open('facility-docs-v1'); const hit = await c.match(key); if(hit){ const b = await hit.blob(); if(b.size === d.size) return b; } } }catch(e){}
+  const blob = await fetchBlob(d);
+  try{ if(window.caches){ const c = await caches.open('facility-docs-v1'); await c.put(key, new Response(blob)); } }catch(e){}
+  return blob;
+}
+function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('뷰어 로드 실패')); document.head.appendChild(s); }); }
+const PHONE = /(0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}|1[5-9]\d{2}[-.\s]?\d{4})/g;
+function linkPhones(txt){ return esc(txt).replace(PHONE, m => `<a href="tel:${m.replace(/\D/g, '')}">${m}</a>`); }
+
+let curDoc = null, curBlob = null, objUrl = null;
+function closeViewer(){ $('viewer').hidden = true; $('vBody').innerHTML = ''; document.body.style.overflow = ''; if(objUrl){ URL.revokeObjectURL(objUrl); objUrl = null; } curDoc = curBlob = null; }
+$('vClose').addEventListener('click', closeViewer);
+$('vSave').addEventListener('click', () => { if(curBlob) saveBlob(curBlob, curDoc.file_name); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('viewer').hidden) closeViewer(); });
+
+async function showXlsx(blob){
+  if(!window.ExcelJS) await loadScript('vendor/exceljs.min.js');
+  const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await blob.arrayBuffer());
+  const MAXR = 1000, MAXC = 40; const sheets = [];
+  wb.eachSheet(ws => {
+    if(ws.state && ws.state !== 'visible') return;
+    const rows = Math.min(ws.rowCount, MAXR), cols = Math.min(ws.columnCount, MAXC); let html = '<table class="xl">';
+    for(let r = 1; r <= rows; r++){
+      const row = ws.getRow(r); let tds = '', any = false;
+      for(let c = 1; c <= cols; c++){
+        const cell = row.getCell(c); let txt = '';
+        if(!(cell.isMerged && cell.master && cell.master !== cell)){ try{ txt = cell.text || ''; }catch(e){ txt = ''; } }
+        if(txt) any = true; tds += `<td>${linkPhones(txt)}</td>`;
+      }
+      if(any) html += '<tr>' + tds + '</tr>';
+    }
+    html += '</table>' + (ws.rowCount > MAXR || ws.columnCount > MAXC ? '<div class="vnote">일부만 표시했습니다. 전체는 내려받기로 확인하세요.</div>' : '');
+    sheets.push({name: ws.name, html});
+  });
+  if(!sheets.length) throw new Error('표시할 시트가 없습니다');
+  const tabs = $('vTabs'), body = $('vBody');
+  const show = i => { body.innerHTML = sheets[i].html; body.scrollTop = 0; [...tabs.children].forEach((b, j) => b.setAttribute('aria-pressed', String(i === j))); };
+  tabs.innerHTML = sheets.map((s, i) => `<button type="button" class="chip" data-i="${i}" aria-pressed="false">${esc(s.name)}</button>`).join('');
+  tabs.hidden = sheets.length < 2; tabs.onclick = e => { const b = e.target.closest('.chip'); if(b) show(+b.dataset.i); };
+  show(0);
+}
+async function showDocx(blob){
+  if(!window.mammoth) await loadScript('vendor/mammoth.browser.min.js');
+  const out = await mammoth.convertToHtml({arrayBuffer: await blob.arrayBuffer()});
+  const f = document.createElement('iframe'); f.setAttribute('sandbox', '');   // 문서 안의 스크립트는 실행되지 않음
+  f.srcdoc = '<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:15px/1.6 sans-serif;padding:14px;word-break:break-word}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:4px 8px}img{max-width:100%}</style>' + out.value;
+  $('vBody').innerHTML = ''; $('vBody').appendChild(f);
+}
 async function openDoc(d, forceSave, btn){
-  const tab = (!forceSave && OPEN_IN_TAB.test(d.mime)) ? window.open('', '_blank') : null;   // 팝업 차단 회피: 클릭 직후 먼저 연다
+  const kind = kindOf(d);
+  const tab = (!forceSave && kind === 'pdf') ? window.open('', '_blank') : null;   // 팝업 차단 회피: 클릭 직후 먼저 연다
   const label = btn.textContent; btn.disabled = true; btn.textContent = '불러오는 중…';
   try{
-    const blob = await fetchBlob(d);
-    if(tab){ tab.location.href = URL.createObjectURL(blob); }
-    else saveBlob(blob, d.file_name);
+    const blob = await getBlob(d);
+    if(forceSave || kind === 'other'){ saveBlob(blob, d.file_name); return; }
+    if(kind === 'pdf'){ tab.location.href = URL.createObjectURL(blob); return; }
+    curDoc = d; curBlob = blob; $('vTitle').textContent = d.title; $('vTabs').hidden = true;
+    $('vBody').innerHTML = '<div class="vmsg">불러오는 중…</div>'; $('viewer').hidden = false; document.body.style.overflow = 'hidden';
+    if(kind === 'image'){ objUrl = URL.createObjectURL(blob); $('vBody').innerHTML = `<img alt="${esc(d.title)}" src="${objUrl}">`; }
+    else if(kind === 'text'){ $('vBody').innerHTML = '<pre></pre>'; $('vBody').firstChild.textContent = await blob.text(); }
+    else if(kind === 'xlsx') await showXlsx(blob);
+    else if(kind === 'docx') await showDocx(blob);
   }catch(e){
     if(tab) tab.close();
-    alert('서류를 불러오지 못했습니다.\n' + (e.message || '').slice(0, 120));
+    if(!$('viewer').hidden) $('vBody').innerHTML = '<div class="vmsg">이 서류는 화면에서 열 수 없습니다. 위의 “내려받기”를 누르세요.<br><small></small></div>';
+    else alert('서류를 불러오지 못했습니다.\n' + (e.message || '').slice(0, 120));
   }finally{ btn.disabled = false; btn.textContent = label; }
 }
 
 $('list').addEventListener('click', async e => {
-  const btn = e.target.closest('button[data-a]'); if(!btn) return;
+  let btn = e.target.closest('button[data-a]');
+  if(!btn){ const ttl = e.target.closest('.ttl'); const it = ttl && ttl.closest('.item'); btn = it && it.querySelector('button[data-a="open"]'); }
+  if(!btn) return;
   const id = btn.closest('.item').dataset.id; const d = docs.find(x => x.id === id); if(!d) return;
   const a = btn.dataset.a;
   if(a === 'open') openDoc(d, false, btn);
