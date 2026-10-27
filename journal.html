@@ -59,7 +59,11 @@ h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .subbar .sp{flex:1}
 main{padding-block:0 90px}
 .day{padding:14px 0 16px;border-bottom:1px solid var(--line);scroll-margin-top:62px}
-.day h3{margin:0 0 6px;font-size:15px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+.day{margin-top:6px}
+.day h3{margin:0 0 8px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;background:var(--soft);border-left:5px solid var(--ink);border-radius:0 8px 8px 0;padding:8px 12px}
+.day.sat h3{border-left-color:#1E6FD9}.day.sun h3{border-left-color:#D93025}
+.day.sat h3 .w{color:#1E6FD9}.day.sun h3 .w{color:#D93025}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .day.sat h3{border-left-color:#6EA8FF}:root:not([data-theme="light"]) .day.sun h3{border-left-color:#FF8A80}:root:not([data-theme="light"]) .day.sat h3 .w{color:#6EA8FF}:root:not([data-theme="light"]) .day.sun h3 .w{color:#FF8A80}}
 .day h3 small{font-weight:500;color:var(--muted);font-size:12px}
 .day.today h3::after{content:"오늘";font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px}
 .day.flash{animation:flash 1.4s ease-out}
@@ -342,10 +346,10 @@ function hlHtml(text){
   return text.split(re).map((p, i) => i % 2 ? `<mark>${esc(p)}</mark>` : esc(p)).join('');
 }
 function heading(d){ const dt = parseD(d), y = dt.getFullYear(), cy = new Date().getFullYear();
-  return `${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일` + (y !== cy ? `<small>${y}년</small>` : ''); }
+  return `${dt.getMonth()+1}월 ${dt.getDate()}일 <span class="w">${WD[dt.getDay()]}요일</span>` + (y !== cy ? `<small>${y}년</small>` : ''); }
 function dayHTML(d){
   const b = bodyOf(d);
-  return `<section class="day${d === todayStr() ? ' today' : ''}" data-d="${d}"><h3>${heading(d)}</h3><div class="txt${b ? '' : ' ph'}">${b ? hlHtml(b) : '탭하여 입력'}</div></section>`;
+  return `<section class="day${d === todayStr() ? ' today' : ''}${[' sun','','','','','',' sat'][parseD(d).getDay()]}" data-d="${d}"><h3>${heading(d)}</h3><div class="txt${b ? '' : ' ph'}">${b ? hlHtml(b) : '탭하여 입력'}</div></section>`;
 }
 function allDates(){
   const s = new Set([...extra, todayStr()]);
