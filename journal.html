@@ -164,7 +164,7 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
       <p>선택한 날짜의 업무일지를 기존 엑셀 양식에 채워서 내려받습니다. 날짜와 업무내용 <b>(14행부터)</b> 외의 칸은 양식 그대로 비워 둡니다.</p>
       <div class="row"><label class="ck">날짜 <input type="date" id="xlDate"></label></div>
       <div id="xlInfo" class="rcount"></div>
-      <div class="row"><button type="button" class="btn primary" id="xlGo">엑셀 만들기</button></div>
+      <div class="row"><button type="button" class="btn primary" id="xlGo">저장(엑셀)</button></div>
     </div>
   </details>
   <details class="tools" id="tools">
@@ -579,7 +579,7 @@ $('xlGo').addEventListener('click', async () => {
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
     $('xlInfo').textContent = `${r.name} 저장 · 업무 ${r.count}줄`;
   }catch(e){ $('xlInfo').textContent = '엑셀을 만들지 못했습니다: ' + (e && e.message || e); }
-  btn.textContent = '엑셀 만들기'; xlInfo();
+  btn.textContent = '저장(엑셀)'; xlInfo();
 });
 
 /* ---------- 시작 ---------- */
