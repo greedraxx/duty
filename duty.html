@@ -14,7 +14,7 @@
   --bg:#FFFFFF; --surface:#FFFFFF; --ink:#111111; --muted:#777777; --line:#E4E4E4; --field-line:#BDBDBD; --soft:#F3F3F3;
   --accent:#111111; --accent-ink:#FFFFFF; --accent-soft:#F3F3F3;
   --warn:#8A5A00; --warn-soft:#FFF4DD; --bad:#C62828; --bad-soft:#FDECEA;
-  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-head:#FFF4D6; --paper-sub:#F2F2F2;
+  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-head:#FFF4D6; --paper-sub:#D9D9D9;
   --f-ui:"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --f-num:"Roboto", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   --f-doc:"Noto Sans KR", "Malgun Gothic", sans-serif;
@@ -358,8 +358,7 @@ main{padding-block:18px calc(var(--bnav-h) + 110px)}
 <div class="bar" id="bar">
   <div class="wrap">
     <div class="prog" id="prog"></div>
-    <button type="button" class="btn ghost" id="xlsBtn" hidden>엑셀</button>
-    <button type="button" class="btn ghost" id="pdfBtn" hidden>PDF</button>
+    <button type="button" class="btn ghost" id="xlsBtn" hidden>엑셀 저장</button>
     <button type="button" class="btn primary" id="barBtn">일지 보기</button>
   </div>
 </div>
@@ -835,25 +834,6 @@ async function printSheet(){
 }
 window.addEventListener('afterprint', () => { $('printArea').innerHTML = ''; });
 
-async function savePdf(){
-  const btn=$('pdfBtn'), msg=$('pdfMsg'); btn.disabled=true; msg.textContent='PDF 만드는 중…';
-  try{
-    if(dirty) await saveNow();
-    await Promise.all([loadScript('vendor/html2canvas.min.js'), loadScript('vendor/jspdf.umd.min.js')]);
-    const host=$('capture'); host.innerHTML = sheetHTML(); const el = host.firstElementChild;
-    if(document.fonts && document.fonts.ready) await document.fonts.ready;
-    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
-    host.innerHTML='';
-    const pdf = new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
-    const ratio = canvas.height/canvas.width; let w=210, h=210*ratio; if(h>297){ h=297; w=297/ratio; }
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',(210-w)/2,0,w,h);
-    downloadBlob(pdf.output('blob'), `당직일지_${cur.date}.pdf`);
-    msg.textContent='PDF를 내려받았습니다.';
-  }catch(e){
-    $('capture').innerHTML='';
-    msg.textContent = 'PDF 저장에 실패했습니다. 다시 시도해 주세요.';
-  }finally{ btn.disabled=false; }
-}
 
 
 /* ================= 엑셀 저장 ================= */
@@ -1035,14 +1015,13 @@ function showTab(t){
   ['input','sheet','base'].forEach(x => { $('p-'+x).hidden = x!==t; $('tab-'+x).setAttribute('aria-selected', String(x===t)); });
   $('bar').hidden = t==='base';
   $('barBtn').textContent = t==='sheet' ? '출력' : '일지 보기';
-  $('xlsBtn').hidden = t!=='sheet'; $('pdfBtn').hidden = t!=='sheet'; $('prog').hidden = t==='sheet'; $('bar').classList.toggle('onsheet', t==='sheet');
+  $('xlsBtn').hidden = t!=='sheet'; $('prog').hidden = t==='sheet'; $('bar').classList.toggle('onsheet', t==='sheet');
   if(t==='sheet') requestAnimationFrame(renderSheet);
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 $('barBtn').addEventListener('click', () => tab==='sheet' ? printSheet() : showTab('sheet'));
 $('xlsBtn').addEventListener('click', saveXlsx);
-$('pdfBtn').addEventListener('click', savePdf);
 
 /* ================= 백업 ================= */
 $('exportBtn').addEventListener('click', async () => {
