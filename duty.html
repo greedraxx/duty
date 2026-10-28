@@ -753,7 +753,7 @@ function sheetHTML(){
   const P = cur.patrol||{};
   const sel = (k,opts) => opts.map(o=>`<span class="o${P[k]===o?' sel':''}">${esc(o)}</span>`).join(' / ');
   const val = (k) => `<span class="v">${esc(P[k]??'')}</span>`;
-  const mrow = (m, labelCells) => { const r=res.meters[m.k]; return `<tr class="en">${labelCells}<td class="n t0" colspan="3">${fmt(r.today,m.dec)}</td><td class="n" colspan="3">${fmt(r.prev,m.dec)}</td><td class="n t1" colspan="3">${fmt(r.diff,m.dec)}</td><td class="n" colspan="3">${fmt(r.usage,m.dec)}</td><td class="n" colspan="3">${fmt(r.month,m.dec)}</td></tr>`; };
+  const mrow = (m, labelCells) => { const r=res.meters[m.k]; return `<tr class="en">${labelCells}<td class="n t0" colspan="3">${fmt(r.today,m.dec)}</td><td class="n" colspan="3">${fmt(r.prev,m.dec)}</td><td class="n" colspan="3">${fmt(r.diff,m.dec)}</td><td class="n t1" colspan="3">${fmt(r.usage,m.dec)}</td><td class="n" colspan="3">${fmt(r.month,m.dec)}</td></tr>`; };
   const M = Object.fromEntries(METERS.map(m=>[m.k,m]));
   const run = cur.run||{};
   const box = (b) => b.items.map(it => it.n
@@ -891,7 +891,7 @@ function fillWorkbook(wb, D){
   put('B6', D.dateText);
   put('J6', '날씨: ' + s(D.weather) + '      기온: 최고 ' + s(D.tHi) + ' ℃,  최저 ' + s(D.tLo) + ' ℃');
 
-  // 에너지 사용 현황: 금일(굵게 14) / 전일·사용량·월누계(12) / 전일대비 증감(12 굵게)
+  // 에너지 사용 현황: 금일(굵게 14) / 전일·증감·월누계(12) / 사용량(12 굵게)
   const ROWS = {elec:9, heat:11, cool:13, water:15, gas:17, drain:18};
   const COLS = {today:'F', prev:'I', diff:'L', usage:'O', month:'R'};
   for(const k in ROWS){
@@ -900,7 +900,8 @@ function fillWorkbook(wb, D){
       const addr = COLS[key] + ROWS[k]; put(addr, r[key], f);
       const c = ws.getCell(addr);
       if(key === 'today') style(addr, {font: Object.assign({}, c.font, {bold: true, size: 14})});
-      else if(key === 'diff') style(addr, {font: Object.assign({}, c.font, {bold: true, size: 12})});
+      else if(key === 'usage') style(addr, {font: Object.assign({}, c.font, {bold: true, size: 12})});
+      else if(key === 'diff') style(addr, {font: Object.assign({}, c.font, {bold: false, size: 12})});
       else style(addr, {font: Object.assign({}, c.font, {size: 12})});
     }
   }
