@@ -134,6 +134,7 @@ details.card[open] summary{border-bottom:1px solid var(--line)}
 .btn.ghost{background:none;color:var(--ink)}
 .btn:disabled{opacity:.45;cursor:default}
 #bar.onsheet .btn{flex:1}
+.inp input.rej{outline:2px solid #D64545;outline-offset:1px}
 .hint{font-size:12.5px;color:var(--muted);margin:0}
 
 @media (max-width:440px){
@@ -406,7 +407,7 @@ const S2 = ['정상','비정상'];
 const PATROL = [
   {t:'옥상 냉각탑', items:[{k:'ctLevel',l:'냉각탑 수위',o:['높음','보통','낮음'],ok:'보통'},{k:'ctNoise',l:'냉각탑 이상 소음',o:['유','무'],ok:'무'}]},
   {t:'가로등&간판', items:[{k:'lights',l:'점등 상태',o:S2,ok:'정상'}]},
-  {t:'주방 워크인 냉장&냉동 온도', items:[{k:'fridge',l:'냉장 (2~3 ℃)',n:true,u:'℃',r:[2,3],short:'워크인 냉장',hint:'2~3 ℃'},{k:'freezer',l:'냉동 (-18~-22 ℃)',n:true,u:'℃',r:[-22,-18],short:'워크인 냉동',hint:'-18~-22 ℃'}]},
+  {t:'주방 워크인 냉장&냉동 온도', items:[{k:'fridge',l:'냉장 (2~3 ℃)',n:true,u:'℃',r:[2,3],lim:[-25,50],short:'워크인 냉장',hint:'2~3 ℃'},{k:'freezer',l:'냉동 (-18~-22 ℃)',n:true,u:'℃',r:[-22,-18],lim:[-25,50],short:'워크인 냉동',hint:'-18~-22 ℃'}]},
   {t:'식당 퇴실 점검', items:[{k:'kGas',l:'가스',o:['Open','Close'],ok:'Close'},{k:'kWater',l:'수도',o:['Open','Close'],ok:'Close'}]},
   {t:'저수조 수위', items:[{k:'tankWater',l:'현 수위',n:true,u:'%',short:'저수조 수위'}]},
   {t:'소화수조 수위', items:[{k:'tankFire',l:'현 수위',n:true,u:'%',short:'소화수조 수위'}]},
@@ -673,7 +674,7 @@ function fillForm(){
   METERS.forEach(m => $('m-'+m.k).value = (cur.meters[m.k]??''));
   RUN.forEach(r => $('r-'+r.k).value = (cur.run[r.k]??''));
   MONTHLY.forEach(m => $('mo-'+m.k).value = (cur.monthly[m.k]??''));
-  NUMS.forEach(it => { const el=$('pt-'+it.k); el.value = cur.patrol[it.k]??''; markRange(el,it); });
+  NUMS.forEach(it => { const el=$('pt-'+it.k); el.value = cur.patrol[it.k]??''; el._ok = el.value; markRange(el,it); });
   STATUS.forEach(syncSeg);
 }
 function syncSeg(it){
@@ -692,7 +693,7 @@ function buildForm(){
   $('nums').innerHTML = NUMS.map(it => `
     <div class="row"><label class="lb" for="pt-${it.k}">${esc(it.short||it.l)}${it.hint?`<small>기준 ${esc(it.hint)}</small>`:''}</label>
       <span class="pv" id="pv-${it.k}"></span>
-      <span class="inp"><input id="pt-${it.k}" ${it.def==null?'class="req" ':''}inputmode="${it.u==='병'?'numeric':'decimal'}" autocomplete="off"><span class="u">${it.u||''}</span></span></div>`).join('');
+      <span class="inp"><input id="pt-${it.k}" ${it.def==null?'class="req" ':''}inputmode="${it.lim?'text':it.u==='병'?'numeric':'decimal'}" ${it.lim?`pattern="-?[0-9]*\\.?[0-9]*" title="${it.lim[0]}~${it.lim[1]} ℃"`:''} autocomplete="off"><span class="u">${it.u||''}</span></span></div>`).join('');
   $('status').innerHTML = STATUS.map(it => `
     <div class="row" id="st-${it.k}"><span class="lb">${esc(it.box)}<small>${esc(it.l)}</small></span>
       <span class="seg" role="group" aria-label="${esc(it.box)} ${esc(it.l)}">${it.o.map(o=>`<button type="button" data-pk="${it.k}" data-v="${o}" class="${o!==it.ok?'abn':''}" aria-pressed="false">${o}</button>`).join('')}</span></div>`).join('');
@@ -705,11 +706,22 @@ function buildForm(){
   METERS.forEach(m => $('m-'+m.k).addEventListener('input', e => { cur.meters[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
   RUN.forEach(r => $('r-'+r.k).addEventListener('input', e => { cur.run[r.k]=e.target.value; scheduleSave(); }));
   MONTHLY.forEach(m => $('mo-'+m.k).addEventListener('input', e => { cur.monthly[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
-  NUMS.forEach(it => { const el=$('pt-'+it.k); el.addEventListener('input', e => { cur.patrol[it.k]=e.target.value.trim(); markRange(el,it); scheduleSave(); }); });
+  NUMS.forEach(it => { const el=$('pt-'+it.k); el.addEventListener('input', e => { if(it.lim) limitInput(el,it); cur.patrol[it.k]=e.target.value.trim(); markRange(el,it); scheduleSave(); }); });
   $('status').addEventListener('click', e => {
     const btn = e.target.closest('button[data-pk]'); if(!btn) return;
     const it = STATUS.find(x => x.k===btn.dataset.pk); cur.patrol[it.k] = btn.dataset.v; syncSeg(it); scheduleSave();
   });
+}
+/* 온도 입력: 숫자·마이너스·소수점만, 맨 앞 '-'만, 허용 범위(lim)를 넘는 값은 직전 값으로 되돌림 */
+function limitInput(el,it){
+  let v = el.value.replace(/[−–—‐]/g,'-').replace(/[^0-9.\-]/g,'');
+  v = (v[0]==='-'?'-':'') + v.replace(/-/g,'');
+  const i = v.indexOf('.'); if(i>=0) v = v.slice(0,i+1) + v.slice(i+1).replace(/\./g,'');
+  const n = num(v);
+  if(n!=null && (n<it.lim[0] || n>it.lim[1])){
+    v = el._ok ?? ''; el.classList.add('rej'); clearTimeout(el._rt); el._rt = setTimeout(()=>el.classList.remove('rej'),900);
+  } else el._ok = v;
+  if(el.value!==v) el.value = v;
 }
 function markRange(el,it){ const v=num(el.value); el.classList.toggle('out', !!(it.r && v!=null && (v<it.r[0]||v>it.r[1]))); }
 
