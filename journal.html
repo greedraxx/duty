@@ -77,11 +77,19 @@ mark.cur{background:#FF9F1A;color:#111;outline:2px solid #FF9F1A}
 .fab{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:7;height:44px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer}
 .savestate{font-size:12px;color:var(--muted)}
 .notice{margin:18px 0 8px;border:2px solid var(--ink);border-radius:12px;padding:12px 14px;background:var(--soft)}
-.notice .nh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
-.notice .nh b{font-size:15px;font-weight:800}
-.notice .nh span{font-size:12px;color:var(--muted)}
-.notice textarea{display:block;width:100%;min-height:7em;border:1px solid var(--field-line);border-radius:8px;padding:8px 10px;background:var(--surface);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden}
-.notice textarea:focus{outline:none;border-color:var(--ink)}
+:root{--cDefault:var(--ink);--cOrange:#B84A00;--cRed:#C62828;--cGreen:#1B7F3B;--cBlue:#1E5FBF}
+:root[data-theme="dark"]{--cOrange:#FF9F43;--cRed:#FF8A80;--cGreen:#6FD38A;--cBlue:#8AB4FF}
+.nsec{--c:var(--cDefault)}.nsec.c-orange{--c:var(--cOrange)}.nsec.c-red{--c:var(--cRed)}.nsec.c-green{--c:var(--cGreen)}.nsec.c-blue{--c:var(--cBlue)}
+.nsec + .nsec{margin-top:18px}
+.nsec .nh{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--c);padding-bottom:6px;margin-bottom:8px}
+.nsec .nt{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:15px;font-weight:800;color:var(--c);padding:4px 0;border-radius:4px}
+.nsec .nt:focus{outline:none;background:var(--surface)}
+.nsec .ncol{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:var(--c);cursor:pointer;padding:0}
+.nsec .ndel{flex:none;height:28px;padding:0 9px;border:1px solid var(--field-line);border-radius:7px;background:none;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer}
+.nsec textarea{display:block;width:100%;min-height:6em;border:1px solid var(--field-line);border-radius:8px;padding:8px 10px;background:var(--surface);color:var(--c);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden}
+.nsec textarea:focus{outline:none;border-color:var(--c)}
+.nfoot{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.nempty{color:var(--muted);font-size:13.5px;padding:2px 0 0}
 .banner{border-radius:8px;padding:10px 12px;font-size:13.5px;margin:8px 0}
 .banner.bad{background:var(--bad-soft);color:var(--bad)}
 .rcount{font-size:12.5px;color:var(--muted);margin:10px 0 8px}
@@ -156,10 +164,9 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
     <button type="button" class="btn more" id="more" hidden>더 보기</button>
   </section>
   <section id="notes" aria-label="업무일지"></section>
-  <section class="notice" id="notice" aria-label="전달사항">
-    <div class="nh"><b>전달사항</b></div>
-    <textarea id="noticeTa" maxlength="20000" spellcheck="false" placeholder="전달할 사항을 입력하세요" aria-label="전달사항"></textarea>
-    <div class="savestate" id="noticeState"></div>
+  <section class="notice" id="notice" aria-label="전달사항 · 지시사항">
+    <div id="nsecs"></div>
+    <div class="nfoot"><button type="button" class="btn small" id="nAdd">＋ 구역 추가</button><span class="savestate" id="noticeState"></span></div>
   </section>
 
   <details class="tools" id="xlTools">
@@ -286,8 +293,8 @@ async function sync(withGate){
     const ok = await sb('rpc/team_check', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
     if(ok === false){ showGate(withGate && teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off', '팀 코드 필요'); return; }
     $('gate').hidden = true;
-    await flush(); await noticeFlush();
-    await pull(); await noticePull();
+    await flush(); await nFlush();
+    await pull(); await nPull();
     loaded = true; online = true;
     if(firstLoad){ firstLoad = false; if(!userMoved) toToday(); }
   }catch(e){ online = false; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
@@ -300,37 +307,100 @@ function renderMsgs(){
   $('msgs').innerHTML = m.join('');
 }
 
-/* ---------- 전달사항 (날짜와 무관한 고정 메모. config 표의 'journal:notice' 한 줄) ---------- */
-const NKEY = 'journal:notice';
-let noticeTs = '', noticeTyped = 0, noticeTimer = null, noticeBusy = false;
-let noticePend = store.get('journal.noticePending');          // null 이면 미전송 없음
-const nta = $('noticeTa');
-nta.value = noticePend != null ? noticePend : (store.get('journal.notice') || '');
-const nAuto = () => { nta.style.height = 'auto'; nta.style.height = Math.max(nta.scrollHeight + 2, 120) + 'px'; };
-nAuto();
-nta.addEventListener('input', () => {
-  noticeTyped = Date.now(); noticePend = nta.value; store.set('journal.noticePending', noticePend); store.set('journal.notice', nta.value); nAuto();
-  $('noticeState').textContent = '입력 중…'; clearTimeout(noticeTimer); noticeTimer = setTimeout(noticeFlush, 800);
+/* ---------- 전달사항·지시사항 구역들 (날짜와 무관한 고정 메모. config 표의 'journal:notices' 한 줄)
+   구역마다 {id,title,color,text,u(수정시각),del}. 서버와 합칠 때 구역별로 u가 더 최신인 쪽을 씁니다. ---------- */
+const NKEY = 'journal:notices', NLEG = 'journal:notice';
+const NCOLORS = ['default','orange','red','green','blue'], NCNAME = {default:'기본',orange:'주황',red:'빨강',green:'초록',blue:'파랑'};
+const nbox = $('nsecs');
+let nsecs = [], nPend = false, nVer = 0, nTyped = 0, nTimer = null, nBusy = false, nSig = '', nLegacyDone = false;
+const nSave = () => { store.set('journal.notices', JSON.stringify(nsecs)); store.set('journal.noticesPending', nPend ? '1' : '0'); };
+const nDefaults = legacy => [{id:'n1', title:'전달사항', color:'default', text:legacy || '', u:0}, {id:'n2', title:'팀장 지시사항', color:'orange', text:'', u:0}];
+(function nInit(){
+  try{ const c = JSON.parse(store.get('journal.notices') || 'null'); if(Array.isArray(c)) nsecs = c; }catch(e){}
+  nPend = store.get('journal.noticesPending') === '1';
+  const legacyText = store.get('journal.notice') || '', legacyPend = store.get('journal.noticePending');
+  if(!nsecs.length) nsecs = nDefaults(legacyText);
+  if(legacyPend != null){                                        // 예전 방식으로 쓰다 전송 못 한 내용
+    const n1 = nsecs.find(x => x.id === 'n1');
+    if(n1 && !n1.del){ n1.text = legacyPend; n1.u = Date.now(); nPend = true; }
+    store.del('journal.noticePending');
+  }
+  nSave();
+})();
+const nVisible = () => nsecs.filter(x => !x.del);
+const nNewId = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+function nMerge(local, remote){                                  // 구역별로 최신(u) 쪽. 같으면 서버 것. 순서는 서버 순서 → 내 새 구역
+  const L = new Map(local.map(x => [x.id, x])), R = new Map(remote.map(x => [x.id, x])), out = [];
+  for(const r of remote){ const l = L.get(r.id); out.push(l && (l.u || 0) > (r.u || 0) ? l : r); }
+  for(const l of local) if(!R.has(l.id)) out.push(l);
+  return out;
+}
+const nAuto = ta => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight + 2, 96) + 'px'; };
+function nSecHTML(x){
+  return `<div class="nsec c-${NCOLORS.includes(x.color) ? x.color : 'default'}" data-id="${esc(x.id)}"><div class="nh"><input class="nt" maxlength="40" value="${esc(x.title)}" aria-label="구역 이름" placeholder="구역 이름"><button type="button" class="ncol" aria-label="글자색 바꾸기" title="글자색: ${NCNAME[x.color] || '기본'} (누르면 바뀜)"></button><button type="button" class="ndel" aria-label="이 구역 삭제">삭제</button></div><textarea class="nta" maxlength="20000" spellcheck="false" placeholder="내용을 입력하세요" aria-label="${esc(x.title)} 내용"></textarea></div>`;
+}
+function nRender(force){
+  const vis = nVisible(), sig = JSON.stringify(vis.map(x => [x.id, x.title, x.color]));
+  const inside = nbox.contains(document.activeElement);
+  if(sig !== nSig){
+    if(inside && !force){ nSig = ''; return; }                   // 입력 중에는 구조를 바꾸지 않음(끝나면 다시 그림)
+    nbox.innerHTML = vis.length ? vis.map(nSecHTML).join('') : '<div class="nempty">구역이 없습니다. 아래에서 추가하세요.</div>';
+    nSig = sig;
+  }
+  vis.forEach(x => {
+    const el = nbox.querySelector(`.nsec[data-id="${CSS.escape(x.id)}"]`); if(!el) return;
+    const ta = el.querySelector('.nta');
+    if(ta !== document.activeElement && Date.now() - nTyped > 2500 && ta.value !== x.text) ta.value = x.text;
+    nAuto(ta);
+  });
+}
+function nTouch(x){ x.u = Date.now(); nPend = true; nVer++; nTyped = Date.now(); nSave(); $('noticeState').textContent = '입력 중…'; clearTimeout(nTimer); nTimer = setTimeout(nFlush, 800); }
+nbox.addEventListener('input', e => {
+  const el = e.target.closest('.nsec'); if(!el) return; const x = nsecs.find(y => y.id === el.dataset.id); if(!x) return;
+  if(e.target.classList.contains('nta')){ x.text = e.target.value; nAuto(e.target); }
+  else if(e.target.classList.contains('nt')){ x.title = e.target.value; nSig = JSON.stringify(nVisible().map(y => [y.id, y.title, y.color])); }
+  nTouch(x);
 });
-nta.addEventListener('blur', () => { if(noticePend != null) noticeFlush(); });
-async function noticeFlush(){
-  if(noticePend == null || noticeBusy || !configured()) return;
-  noticeBusy = true; const sent = noticePend;
+nbox.addEventListener('click', e => {
+  const el = e.target.closest('.nsec'); if(!el) return; const x = nsecs.find(y => y.id === el.dataset.id); if(!x) return;
+  if(e.target.closest('.ncol')){
+    x.color = NCOLORS[(NCOLORS.indexOf(x.color) + 1) % NCOLORS.length]; nTouch(x); nRender(true);
+  }else if(e.target.closest('.ndel')){
+    if(!confirm(`"${x.title || '이름 없는 구역'}" 구역을 삭제할까요?\n내용도 함께 지워집니다.`)) return;
+    x.del = true; x.text = ''; nTouch(x); nRender(true);
+  }
+});
+nbox.addEventListener('focusout', () => { if(nPend) nFlush(); setTimeout(() => { if(!nbox.contains(document.activeElement)) nRender(false); }, 60); });
+$('nAdd').addEventListener('click', () => {
+  const x = {id: nNewId(), title: '새 구역', color: 'default', text: '', u: Date.now()}; nsecs.push(x); nTouch(x); nRender(true);
+  const t = nbox.querySelector(`.nsec[data-id="${CSS.escape(x.id)}"] .nt`); if(t){ t.focus(); t.select(); }
+});
+async function nFetch(key){ return sb('config?key=eq.' + encodeURIComponent(key) + '&select=data'); }
+async function nFlush(){
+  if(!nPend || nBusy || !configured()) return;
+  nBusy = true; const ver = nVer;
   try{
-    await sb('config?on_conflict=key', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{key: NKEY, data: {text: sent}}])});
-    if(noticePend === sent){ noticePend = null; store.del('journal.noticePending'); }
-    $('noticeState').textContent = '저장됨';
+    const rows = await nFetch(NKEY), remote = rows.length && rows[0].data && Array.isArray(rows[0].data.sections) ? rows[0].data.sections : [];
+    const merged = nMerge(nsecs, remote);
+    await sb('config?on_conflict=key', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{key: NKEY, data: {v: 2, sections: merged}}])});
+    nsecs = nMerge(nsecs, merged);
+    if(ver === nVer){ nPend = false; $('noticeState').textContent = '저장됨'; } else { clearTimeout(nTimer); nTimer = setTimeout(nFlush, 300); }
+    nSave(); nRender(false);
   }catch(e){ $('noticeState').textContent = '기기에 보관 중 (연결되면 자동 저장)'; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
-  finally{ noticeBusy = false; }
+  finally{ nBusy = false; }
 }
-async function noticePull(){
-  if(noticePend != null) return;                                  // 내 미전송 변경이 우선
-  const rows = await sb('config?key=eq.' + encodeURIComponent(NKEY) + '&select=data,updated_at');
-  if(!rows.length) return;
-  const text = (rows[0].data && rows[0].data.text) || '';
-  noticeTs = rows[0].updated_at; store.set('journal.notice', text);
-  if(nta.value !== text && Date.now() - noticeTyped > 2500){ nta.value = text; nAuto(); }
+async function nPull(){
+  if(!configured() || nPend) return;                             // 내 미전송 변경이 우선
+  const rows = await nFetch(NKEY);
+  if(rows.length && rows[0].data && Array.isArray(rows[0].data.sections)){
+    nsecs = nMerge(nsecs, rows[0].data.sections); nLegacyDone = true; nSave(); nRender(false); return;
+  }
+  if(nLegacyDone) return;                                        // 새 방식 기록이 아직 없으면 예전 '전달사항' 한 칸을 첫 구역으로
+  const old = await nFetch(NLEG); nLegacyDone = true;
+  const t = old.length && old[0].data && old[0].data.text || '', n1 = nsecs.find(x => x.id === 'n1');
+  if(t && n1 && !n1.u && !n1.text){ n1.text = t; nSave(); nRender(false); }
 }
+nRender(true);
 
 /* ---------- 메모장 보기: 날짜별 블록을 이어서 쌓고, 맨 아래가 오늘 ---------- */
 const todayStr = () => ymd(new Date());
