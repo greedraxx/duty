@@ -223,15 +223,6 @@ html,body{margin:0}
 .appnav a[href="journal.html"]{color:var(--ink)}
 .appnav a[href="docs.html"]{color:var(--muted)}
 :root[data-theme="dark"] .appnav a[href="duty.html"]{color:#FFD54A}:root[data-theme="dark"] .appnav a[href="schedule.html"]{color:#6FD38A}
-#printArea{display:none}
-@page{size:A4 portrait;margin:0}
-@media print{
-  html,body{background:#fff!important;width:210mm}
-  body > *:not(#printArea){display:none!important}
-  #printArea{display:block!important;width:210mm;height:296.5mm;overflow:hidden}
-  #printArea .sheet{transform:scale(.995);transform-origin:0 0}
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-}
 /* 하단 메뉴 */
 :root{--bnav-h:calc(52px + env(safe-area-inset-bottom,0px))}
 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -242,7 +233,6 @@ html,body{margin:0}
 .bnav a[href="schedule.html"]{color:#1B8A3A}
 .bnav a[aria-current="page"]{border-top-color:currentColor}
 .bnav.hide{display:none}
-@media print{.bnav{display:none!important}}
 :root[data-theme="dark"] .bnav a[href="duty.html"]{color:#FFD54A}:root[data-theme="dark"] .bnav a[href="schedule.html"]{color:#6FD38A}
 .bar{bottom:var(--bnav-h);padding-bottom:10px}
 main{padding-block:18px calc(var(--bnav-h) + 110px)}
@@ -327,7 +317,7 @@ main{padding-block:18px calc(var(--bnav-h) + 110px)}
 
   <!-- 일지 -->
   <section class="panel" id="p-sheet" hidden>
-    <p class="hint">출력 버튼은 A4 세로 1장으로 바로 인쇄합니다. 인쇄 창에서 여백 '없음', 배율 100%로 두세요. <span id="pdfMsg"></span></p>
+    <p class="hint">일지는 미리보기로 확인하고, 엑셀 저장으로 받은 파일을 열어 인쇄하세요. <span id="pdfMsg"></span></p>
     <div class="preview" id="preview"><div class="scaler" id="scaler"></div></div>
   </section>
 
@@ -365,7 +355,6 @@ main{padding-block:18px calc(var(--bnav-h) + 110px)}
 </div>
 
 <div id="capture" aria-hidden="true"></div>
-<div id="printArea" aria-hidden="true"></div>
 
 <div class="gate" id="gate" hidden>
   <form class="gatebox" id="gateForm">
@@ -838,13 +827,6 @@ function downloadBlob(blob, name){
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
-async function printSheet(){
-  if(dirty) await saveNow();
-  $('printArea').innerHTML = sheetHTML();
-  if(document.fonts && document.fonts.ready) await document.fonts.ready;
-  window.print();
-}
-window.addEventListener('afterprint', () => { $('printArea').innerHTML = ''; });
 
 
 
@@ -1027,13 +1009,13 @@ function showTab(t){
   tab = t;
   ['input','sheet','base'].forEach(x => { $('p-'+x).hidden = x!==t; $('tab-'+x).setAttribute('aria-selected', String(x===t)); });
   $('bar').hidden = t==='base';
-  $('barBtn').textContent = t==='sheet' ? '출력' : '일지 보기';
+  $('barBtn').hidden = t==='sheet';
   $('xlsBtn').hidden = t!=='sheet'; $('prog').hidden = t==='sheet'; $('bar').classList.toggle('onsheet', t==='sheet');
   if(t==='sheet') requestAnimationFrame(renderSheet);
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-$('barBtn').addEventListener('click', () => tab==='sheet' ? printSheet() : showTab('sheet'));
+$('barBtn').addEventListener('click', () => showTab('sheet'));
 $('xlsBtn').addEventListener('click', saveXlsx);
 
 /* ================= 백업 ================= */
