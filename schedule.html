@@ -859,13 +859,13 @@
 
 <body>
     <nav class="appnav">
-        <a href="journal.html">업무일지</a>
-        <a href="duty.html">당직일지</a><a href="mof.html">MOF</a>
+        <a href="journal.html">업무일지</a><a href="mof.html">MOF</a>
+        <a href="duty.html">당직일지</a>
         <a href="schedule.html" aria-current="page">근무표</a>
         <a href="docs.html">문서</a>
         <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
     </nav>
-    <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="duty.html">당직일지</a><a href="mof.html">MOF</a><a href="schedule.html" aria-current="page">근무표</a><a href="docs.html">문서</a></div></nav>
+    <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="mof.html">MOF</a><a href="duty.html">당직일지</a><a href="schedule.html" aria-current="page">근무표</a><a href="docs.html">문서</a></div></nav>
     <script>(()=>{const b=document.querySelector('.bnav');if(!b||!matchMedia('(pointer: coarse)').matches)return;const t=e=>e.target&&e.target.matches&&e.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]),textarea');document.addEventListener('focusin',e=>{if(t(e))b.classList.add('hide')});const show=()=>setTimeout(()=>{if(!t({target:document.activeElement}))b.classList.remove('hide')},60);document.addEventListener('focusout',show);document.addEventListener('blur',show,true)})();</script>
     <div class="gate" id="gate" hidden>
         <form class="gatebox" id="gateForm">
