@@ -67,8 +67,9 @@ table.mt{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-num
 .mt input{width:100%;height:46px;border:0;background:transparent;text-align:center;padding:0;font-size:clamp(11.5px,3.55vw,16px);font-variant-numeric:tabular-nums;min-width:0}
 .mt input:focus{background:var(--bg);outline:2px solid var(--ink);outline-offset:-2px}
 .mt input.auto{color:var(--auto)}
-.mt input[id$="-k"]{color:#2F6FC4;font-weight:700}
-:root[data-theme="dark"] .mt input[id$="-k"]{color:#7FB2FF}
+.mt td.kc{background:rgba(47,111,196,.13);box-shadow:inset 0 0 0 2px #2F6FC4}
+:root[data-theme="dark"] .mt td.kc{background:rgba(127,178,255,.17);box-shadow:inset 0 0 0 2px #7FB2FF}
+.mt td.kc input:focus{background:transparent}
 .mt td.o{font-size:clamp(10.5px,3.1vw,14px);font-weight:700;color:var(--res);padding:2px 1px;white-space:nowrap}
 .mt td.o.big{font-size:clamp(11px,3.3vw,16px);font-weight:800;letter-spacing:-.02em}
 @media(max-width:480px){.mf{margin-inline:-8px}.warn{margin-inline:2px}}
@@ -295,7 +296,7 @@ const GROUPS = [{ids:[0,1,2], key:'act', unit:'kWh'}, {ids:[3,4], key:'rea', uni
 const LBL = ['주간,중간','저녁,최대','심야,경부하','주간,중간','저녁,최대'];
 const lab = i => `<td class="lb"><b>${ITEMS[i].n}</b><i>${i < 3 ? '유효' : '무효'}</i><u>${LBL[i]}</u></td>`;
 $('mtb').innerHTML = GROUPS.map(g => g.ids.map((i, j) => `<tr>${lab(i)}
-  <td><input id="i${i}-k" inputmode="decimal" autocomplete="off" aria-label="${ITEMS[i].n}번 금일지침"></td>
+  <td class="kc"><input id="i${i}-k" inputmode="decimal" autocomplete="off" aria-label="${ITEMS[i].n}번 금일지침"></td>
   <td><input id="i${i}-l" inputmode="decimal" autocomplete="off" aria-label="${ITEMS[i].n}번 전일지침"></td>
   <td class="o" id="i${i}-d">—</td><td class="o" id="i${i}-x">—</td>
   ${j === 0 ? `<td class="o big na" rowspan="${g.ids.length}" id="sum-${g.key}">—</td><td class="o big na" rowspan="${g.ids.length}" id="m-${g.key}">—</td>` : ''}</tr>`).join('')).join('');
