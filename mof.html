@@ -83,6 +83,17 @@ details.opt[open]>summary::after{content:"–"}
 details.opt .in{padding:0 12px 12px}
 .note{font-size:12px;color:var(--muted);margin:2px 0 8px}
 .mt.bs td.lb{height:34px}
+.kp{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px}
+.kp h3{margin:0 0 10px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.kp h3 small{font-size:12px;font-weight:500;color:var(--muted)}
+.kp .go{display:flex;align-items:center;justify-content:center;height:44px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;font-size:14px}
+.kp dl{margin:12px 0 0;display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center}
+.kp dt{font-size:12px;color:var(--muted)}
+.kp dd{margin:0;font-size:16px;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.kp dd input{width:100%;height:40px;border:1px solid var(--field-line);border-radius:8px;padding:0 10px;background:var(--bg);font-size:16px}
+.kp .row{display:flex;gap:6px}
+.kp .btn.small{height:34px;padding:0 10px}
+.kp .msg{margin:8px 0 0;font-size:12px;color:var(--muted)}
 .fine{margin:18px 0 0;font-size:12px;color:var(--muted);line-height:1.6}
 
 .gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -149,6 +160,17 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
     </div>
   </details></div>
 
+  <section class="kp" id="kp" aria-label="한전 파워플래너">
+    <h3>한전 파워플래너 <small>고객번호 · 비밀번호</small></h3>
+    <a class="go" href="https://pp.kepco.co.kr/" target="_blank" rel="noopener noreferrer">한전 파워플래너 열기 ↗</a>
+    <dl>
+      <dt>고객번호</dt><dd id="kpId">—</dd><span class="row"><button type="button" class="btn small" id="kpIdCopy">복사</button></span>
+      <dt>비밀번호</dt><dd id="kpPw">—</dd><span class="row"><button type="button" class="btn small" id="kpShow">보기</button><button type="button" class="btn small" id="kpPwCopy">복사</button></span>
+    </dl>
+    <div class="row" style="margin-top:10px"><button type="button" class="btn small" id="kpEdit">수정</button></div>
+    <p class="msg" id="kpMsg"></p>
+  </section>
+
   <p class="fine">· 전일지침은 전날 날짜에 저장된 금일지침을 자동으로 가져옵니다(회색 글씨). 전날 기록이 없으면 직접 입력하세요. 직접 고친 값이 우선합니다.<br>
   · 입력값은 팀 코드로 서버에 저장되어 폰·PC가 같이 봅니다. 연결이 없으면 이 기기에 보관했다가 연결되면 올립니다.</p>
 </div></main>
@@ -206,7 +228,8 @@ window.MOF = {calc};
 let docs = {}, pending = {};
 try{ docs = JSON.parse(store.get('mof.cache') || '{}') || {}; }catch(e){ docs = {}; }
 try{ pending = JSON.parse(store.get('mof.pending') || '{}') || {}; }catch(e){ pending = {}; }
-const saveLocal = () => { store.set('mof.cache', JSON.stringify(docs)); store.set('mof.pending', JSON.stringify(pending)); };
+const SECRET = 'mof:kepco';                                   // 고객번호·비밀번호: 이 기기 저장소(localStorage)에는 남기지 않고, 서버(팀 코드로 보호)에만 둔다
+const saveLocal = () => { const d = Object.assign({}, docs); delete d[SECRET]; store.set('mof.cache', JSON.stringify(d)); store.set('mof.pending', JSON.stringify(pending)); };
 const dayKey = d => 'mof:' + d, baseKey = d => 'mof:base:' + d.slice(0, 7);
 const blank5 = () => ['','','','',''];
 const getArr = (key, f) => (docs[key] && Array.isArray(docs[key][f]) ? docs[key][f] : blank5()).map(v => v == null ? '' : String(v));
@@ -252,7 +275,7 @@ async function pull(){
     rows.push(...page); if(page.length < 1000) break;
   }
   for(const r of rows){ if(r.key in pending) continue; docs[r.key] = r.data || {}; }
-  saveLocal(); render(false);
+  saveLocal(); render(false); kpRender();
 }
 async function sync(withGate){
   if(!configured()){ status(); return; }
@@ -335,7 +358,42 @@ setInterval(() => { if(!document.hidden) sync(false); }, 30000);
 window.addEventListener('online', () => sync(false));
 window.addEventListener('offline', () => { online = false; status(); });
 
-render(true); status(); sync(false);
+/* ---------- 한전 파워플래너 고객번호 / 비밀번호 ---------- */
+let kpShow = false, kpEditing = false;
+const kpData = () => docs[SECRET] || {};
+function kpRender(){
+  if(kpEditing) return;
+  const d = kpData(); $('kpId').textContent = d.id || '—';
+  $('kpPw').textContent = d.pw ? (kpShow ? d.pw : '•'.repeat(Math.min(d.pw.length, 12))) : '—';
+  $('kpShow').textContent = kpShow ? '숨김' : '보기';
+  $('kpMsg').textContent = d.id || d.pw ? '' : (online ? '아직 저장된 값이 없습니다. 수정을 눌러 입력하세요.' : '연결되면 표시됩니다.');
+}
+async function copyText(t, ok){
+  try{ await navigator.clipboard.writeText(t); $('kpMsg').textContent = ok + ' 복사했습니다.'; }
+  catch(e){ const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); let good = false; try{ good = document.execCommand('copy'); }catch(_){} a.remove(); $('kpMsg').textContent = good ? ok + ' 복사했습니다.' : '복사하지 못했습니다. 직접 선택해 복사하세요.'; }
+  setTimeout(() => { if(!kpEditing) $('kpMsg').textContent = ''; }, 2500);
+}
+$('kpShow').addEventListener('click', () => { kpShow = !kpShow; kpRender(); });
+$('kpIdCopy').addEventListener('click', () => { const d = kpData(); if(d.id) copyText(d.id, '고객번호를'); });
+$('kpPwCopy').addEventListener('click', () => { const d = kpData(); if(d.pw) copyText(d.pw, '비밀번호를'); });
+$('kpEdit').addEventListener('click', async () => {
+  const b = $('kpEdit');
+  if(!kpEditing){
+    kpEditing = true; const d = kpData();
+    $('kpId').innerHTML = '<input id="kpIdIn" autocomplete="off" aria-label="고객번호">'; $('kpPw').innerHTML = '<input id="kpPwIn" autocomplete="off" aria-label="비밀번호">';
+    $('kpIdIn').value = d.id || ''; $('kpPwIn').value = d.pw || ''; b.textContent = '저장'; $('kpMsg').textContent = '';
+    return;
+  }
+  const data = {id: $('kpIdIn').value.trim(), pw: $('kpPwIn').value.trim()};
+  b.disabled = true;
+  try{
+    await sb('config?on_conflict=key', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{key: SECRET, data}])});
+    docs[SECRET] = data; kpEditing = false; b.textContent = '수정'; kpRender(); $('kpMsg').textContent = '저장했습니다.'; setTimeout(() => { if(!kpEditing) $('kpMsg').textContent = ''; }, 2500);
+  }catch(e){ $('kpMsg').textContent = e.status === 401 || e.status === 403 ? '저장 거부 · 팀 코드를 확인하세요.' : '저장 실패 · 연결을 확인하세요.'; }
+  finally{ b.disabled = false; }
+});
+
+render(true); kpRender(); status(); sync(false);
 })();
 </script>
 <script>(()=>{const b=document.querySelector('.bnav');if(!b||!matchMedia('(pointer: coarse)').matches)return;const t=e=>e.target&&e.target.matches&&e.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]),textarea');document.addEventListener('focusin',e=>{if(t(e))b.classList.add('hide')});const show=()=>setTimeout(()=>{if(!t({target:document.activeElement}))b.classList.remove('hide')},60);document.addEventListener('focusout',show);document.addEventListener('blur',show,true)})();</script>
