@@ -53,35 +53,36 @@ h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .datebar .btn.today{width:auto;padding:0 12px}
 .dlabel{font-size:13px;color:var(--muted)}
 
-h2{margin:20px 0 8px;font-size:15px;font-weight:800;display:flex;align-items:baseline;gap:8px}
-h2 small{font-size:12px;font-weight:500;color:var(--muted)}
-.it{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
-.it .hd{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:baseline}
-.it .hd .no{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:6px;background:var(--soft);font-size:12px;font-weight:800}
-.it .hd small{color:var(--muted);font-weight:500;font-size:12px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
-.fld input{height:46px;width:100%;border:1px solid var(--field-line);border-radius:8px;padding:0 12px;font-size:18px;background:var(--bg);font-variant-numeric:tabular-nums}
-.fld input.auto{color:var(--auto)}
-.fld input.auto:focus{color:var(--ink)}
-.fld input.bad{border-color:var(--bad)}
-.res{display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.res b{color:var(--res);font-size:17px;font-weight:800;margin-left:4px;font-variant-numeric:tabular-nums}
-.res b.bad{color:var(--bad)}
-.warn{margin-top:6px;font-size:12px;color:var(--bad)}
-.sum{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.sum span{font-size:14px;font-weight:700}
-.sum span small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
-.sum b{font-size:26px;font-weight:800;color:var(--res);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.sum b i{font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-left:4px}
-.sum b.na{color:var(--muted)}
-details.opt{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-details.opt>summary{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;list-style:none;min-height:44px;display:flex;align-items:center}
+.mf{margin-top:14px;border:2px solid var(--ink);border-radius:4px;background:var(--surface);overflow:hidden}
+.mf .ttl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--ink);background:var(--soft)}
+.mf .ttl b{font-size:15px;letter-spacing:.12em}
+.mf .ttl span{font-size:11px;color:var(--muted)}
+table.mt{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums}
+.mt th,.mt td{border:1px solid var(--field-line);padding:0;text-align:center;vertical-align:middle;overflow:hidden}
+.mt th{background:var(--soft);font-size:clamp(10px,2.9vw,12.5px);font-weight:700;padding:5px 1px;line-height:1.25;word-break:keep-all}
+.mt td.lb{background:var(--soft);font-size:clamp(9.5px,2.7vw,12px);line-height:1.25;padding:3px 1px;word-break:keep-all}
+.mt td.lb b{display:block;font-size:clamp(13px,3.8vw,16px)}
+.mt td.lb i{font-style:normal;display:block;color:var(--muted)}
+.mt td.lb u{text-decoration:none;display:block;font-size:.88em;color:var(--muted)}
+.mt input{width:100%;height:46px;border:0;background:transparent;text-align:center;padding:0;font-size:clamp(11.5px,3.55vw,16px);font-variant-numeric:tabular-nums;min-width:0}
+.mt input:focus{background:var(--bg);outline:2px solid var(--ink);outline-offset:-2px}
+.mt input.auto{color:var(--auto)}
+.mt td.o{font-size:clamp(10.5px,3.1vw,14px);font-weight:700;color:var(--res);padding:2px 1px;white-space:nowrap}
+.mt td.o.big{font-size:clamp(11px,3.3vw,16px);font-weight:800;letter-spacing:-.02em}
+@media(max-width:480px){.mf{margin-inline:-8px}.warn{margin-inline:2px}}
+.mt td.o.na{color:var(--muted);font-weight:500}
+.mt td.o.bad{color:var(--bad)}
+.mt td.o small{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+.warn{margin:8px 2px 0;font-size:12.5px;color:var(--bad)}
+.basebar{margin-top:12px}
+details.opt{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details.opt>summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:13px;list-style:none;min-height:42px;display:flex;align-items:center;color:var(--muted)}
 details.opt>summary::-webkit-details-marker{display:none}
-details.opt>summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:18px}
+details.opt>summary::after{content:"+";margin-left:auto;font-size:18px}
 details.opt[open]>summary::after{content:"–"}
-details.opt .in{padding:0 14px 14px}
-.note{font-size:12px;color:var(--muted);margin:2px 0 10px}
+details.opt .in{padding:0 12px 12px}
+.note{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.mt.bs td.lb{height:34px}
 .fine{margin:18px 0 0;font-size:12px;color:var(--muted);line-height:1.6}
 
 .gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -130,23 +131,23 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
     <span class="dlabel" id="dlabel"></span>
   </div>
 
-  <h2>유효전력량 <small>kWh</small></h2>
-  <div id="g-act"></div>
-  <div class="sum"><span>금일 사용량<small>(4 + 5 + 6번 ×720 합)</small></span><b id="sum-act" class="na">—</b></div>
+  <div class="mf">
+    <div class="ttl"><b>한 전 계 량 기</b><span>MOF계량기 (매일 00:30 검침)</span></div>
+    <table class="mt" id="mt">
+      <colgroup><col style="width:11%"><col style="width:16%"><col style="width:16%"><col style="width:11%"><col style="width:13%"><col style="width:16.5%"><col style="width:16.5%"></colgroup>
+      <thead><tr><th>항목</th><th>금일<br>지침</th><th>전일<br>지침</th><th>검침<br>차</th><th>×720<br>(배율)</th><th>금일<br>사용량</th><th>월누적<br>사용량</th></tr></thead>
+      <tbody id="mtb"></tbody>
+    </table>
+  </div>
+  <div class="warn" id="warn" hidden></div>
 
-  <h2>무효전력량 <small>kVARh</small></h2>
-  <div id="g-rea"></div>
-  <div class="sum"><span>금일 사용량<small>(7 + 8번 ×720 합)</small></span><b id="sum-rea" class="na">—</b></div>
-
-  <details class="opt" id="optBox">
-    <summary>월누적 사용량 (선택)</summary>
+  <div class="basebar"><details class="opt" id="optBox">
+    <summary id="baseSum">월누적 계산 기준 (전월 말 검침)</summary>
     <div class="in">
-      <p class="note">전월 말 검침값(9~13번)을 넣으면 월누적 사용량도 계산합니다. 전월 말 값은 매월 한 번만 넣으면 그 달 전체에 쓰입니다.</p>
-      <div id="g-base"></div>
-      <div class="sum"><span>월누적 사용량 · 유효<small>((4+5+6) − (9+10+11)) ×720</small></span><b id="m-act" class="na">—</b></div>
-      <div class="sum"><span>월누적 사용량 · 무효<small>((7+8) − (12+13)) ×720</small></span><b id="m-rea" class="na">—</b></div>
+      <p class="note">월누적 = (금일지침 − 전월 말 검침) × 720 입니다. 전월 말 값이 없으면 계산할 수 없어서 달마다 한 번만 넣습니다. 비워 두면 월누적 칸은 — 로 둡니다.</p>
+      <table class="mt bs"><colgroup><col style="width:13%"><col></colgroup><tbody id="btb"></tbody></table>
     </div>
-  </details>
+  </details></div>
 
   <p class="fine">· 전일지침은 전날 날짜에 저장된 금일지침을 자동으로 가져옵니다(회색 글씨). 전날 기록이 없으면 직접 입력하세요. 직접 고친 값이 우선합니다.<br>
   · 입력값은 팀 코드로 서버에 저장되어 폰·PC가 같이 봅니다. 연결이 없으면 이 기기에 보관했다가 연결되면 올립니다.</p>
@@ -265,14 +266,15 @@ async function sync(withGate){
 }
 
 /* ---------- 화면 ---------- */
-const mk = (id, it, base) => `<div class="it"><div class="hd"><span class="no">${it.n}</span>${it.name}<small>${it.unit}</small></div>
-  <div class="grid">${base
-    ? `<label class="fld">전월 말 검침<input id="${id}-v" inputmode="decimal" autocomplete="off"></label><span></span>`
-    : `<label class="fld">금일지침<input id="${id}-k" inputmode="decimal" autocomplete="off"></label><label class="fld">전일지침<input id="${id}-l" inputmode="decimal" autocomplete="off"></label>`}</div>
-  ${base ? '' : `<div class="res"><span>검침차<b id="${id}-d">—</b></span><span>×720<b id="${id}-x">—</b></span></div><div class="warn" id="${id}-w" hidden></div>`}</div>`;
-$('g-act').innerHTML = ITEMS.slice(0,3).map((it,i) => mk('i'+i, it)).join('');
-$('g-rea').innerHTML = ITEMS.slice(3).map((it,i) => mk('i'+(i+3), it)).join('');
-$('g-base').innerHTML = BASE.map((it,i) => mk('b'+i, it, true)).join('');
+const GROUPS = [{ids:[0,1,2], key:'act', unit:'kWh'}, {ids:[3,4], key:'rea', unit:'kVARh'}];
+const LBL = ['주간,중간','저녁,최대','심야,경부하','주간,중간','저녁,최대'];
+const lab = i => `<td class="lb"><b>${ITEMS[i].n}</b><i>${i < 3 ? '유효' : '무효'}</i><u>${LBL[i]}</u></td>`;
+$('mtb').innerHTML = GROUPS.map(g => g.ids.map((i, j) => `<tr>${lab(i)}
+  <td><input id="i${i}-k" inputmode="decimal" autocomplete="off" aria-label="${ITEMS[i].n}번 금일지침"></td>
+  <td><input id="i${i}-l" inputmode="decimal" autocomplete="off" aria-label="${ITEMS[i].n}번 전일지침"></td>
+  <td class="o" id="i${i}-d">—</td><td class="o" id="i${i}-x">—</td>
+  ${j === 0 ? `<td class="o big na" rowspan="${g.ids.length}" id="sum-${g.key}">—</td><td class="o big na" rowspan="${g.ids.length}" id="m-${g.key}">—</td>` : ''}</tr>`).join('')).join('');
+$('btb').innerHTML = ITEMS.map((it, i) => `<tr>${lab(i)}<td><input id="b${i}-v" inputmode="decimal" autocomplete="off" aria-label="${it.n}번 전월 말 검침" placeholder="전월 말 검침 (${it.unit})"></td></tr>`).join('');
 
 const prevOf = d => addDays(d, -1);
 function autoL(d){ const k = dayKey(prevOf(d)); return docs[k] && Array.isArray(docs[k].k) ? getArr(k, 'k') : null; }
@@ -290,13 +292,16 @@ function render(force){
     put($('b'+i+'-v'), V[i]);
   }
   const L = effL(d), c = calc(K, L, V);
+  const neg = [];
   for(let i = 0; i < 5; i++){
-    const dd = $('i'+i+'-d'), xx = $('i'+i+'-x'), w = $('i'+i+'-w'), neg = c.d[i] != null && c.d[i] < 0;
-    dd.textContent = fmt(c.d[i]); xx.textContent = fmt(c.x[i]); dd.classList.toggle('bad', neg); xx.classList.toggle('bad', neg);
-    w.hidden = !neg; if(neg) w.textContent = '금일지침이 전일지침보다 작습니다. 입력값을 확인하세요.';
+    const dd = $('i'+i+'-d'), xx = $('i'+i+'-x'), n = c.d[i] != null && c.d[i] < 0;
+    dd.textContent = fmt(c.d[i]); xx.textContent = fmt(c.x[i]); dd.classList.toggle('bad', n); xx.classList.toggle('bad', n); if(n) neg.push(ITEMS[i].n);
   }
-  const set = (id, v, unit) => { const e = $(id); e.className = v == null ? 'na' : ''; e.innerHTML = v == null ? '—' : fmt(v) + '<i>' + unit + '</i>'; };
+  const w = $('warn'); w.hidden = !neg.length; if(neg.length) w.textContent = neg.join('·') + '번: 금일지침이 전일지침보다 작습니다. 입력값을 확인하세요.';
+  const set = (id, v, unit) => { const e = $(id); e.className = 'o big' + (v == null ? ' na' : ''); e.innerHTML = v == null ? '—' : fmt(v) + '<small>' + unit + '</small>'; };
   set('sum-act', c.act, 'kWh'); set('sum-rea', c.rea, 'kVARh'); set('m-act', c.mAct, 'kWh'); set('m-rea', c.mRea, 'kVARh');
+  const needBase = K.some(v => v !== '') && V.some(v => v === '');
+  $('baseSum').textContent = needBase ? '월누적 계산 기준 (전월 말 검침) — 입력하면 월누적이 계산됩니다' : '월누적 계산 기준 (전월 말 검침)';
   const dt = parseD(d); $('dlabel').textContent = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[dt.getDay()]})`;
   if($('date') !== document.activeElement) $('date').value = d;
 }
