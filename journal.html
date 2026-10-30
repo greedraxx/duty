@@ -130,17 +130,19 @@ details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14
 :root[data-theme="dark"] .bnav a[href="duty.html"]{color:#FFD54A}:root[data-theme="dark"] .bnav a[href="schedule.html"]{color:#6FD38A}
 main{padding-bottom:calc(var(--bnav-h) + 70px)}
 .fab{bottom:calc(16px + var(--bnav-h))}
-.themebtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);cursor:pointer;padding:0}a + .themebtn{margin-left:auto}.sync + .themebtn{margin-left:6px}.navrow .sync{flex:1 1 0;min-width:0;justify-content:flex-end}.navrow .sync span:last-child{white-space:normal}</style>
+.themebtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);cursor:pointer;padding:0}a + .themebtn{margin-left:auto}.sync + .themebtn{margin-left:6px}.navrow .sync{flex:1 1 0;min-width:0;justify-content:flex-end}.navrow .sync span:last-child{white-space:normal}.appnav a[href="mof.html"]{color:#2F6FC4}.bnav a[href="mof.html"]{color:#2F6FC4}:root[data-theme="dark"] .appnav a[href="mof.html"]{color:#7FB2FF}:root[data-theme="dark"] .bnav a[href="mof.html"]{color:#7FB2FF}
+/*mof-nav-fit*/@media(max-width:430px){.appnav a{padding:6px 5px;font-size:13.5px}.navrow{gap:0}}@media(max-width:340px){.appnav a{padding:6px 4px;font-size:13px}}
+</style>
 </head>
 <body>
 <nav class="appnav gut"><div class="wrap navrow">
   <a href="journal.html" aria-current="page">업무일지</a>
   <a href="duty.html">당직일지</a>
   <a href="schedule.html">근무표</a>
-  <a href="docs.html">문서</a>
+  <a href="docs.html">문서</a><a href="mof.html">MOF</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
 <button type="button" class="themebtn" id="themeBtn"></button></div></nav>
-<nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html" aria-current="page">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html">근무표</a><a href="docs.html">문서</a></div></nav>
+<nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html" aria-current="page">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html">근무표</a><a href="docs.html">문서</a><a href="mof.html">MOF</a></div></nav>
 
 <header class="head gut"><div class="wrap"><h1>업무일지</h1></div></header>
 

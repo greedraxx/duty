@@ -851,7 +851,9 @@
             font-weight: 600;
             cursor: pointer;
         }
-    </style>
+    .appnav a[href="mof.html"]{color:#2F6FC4}.bnav a[href="mof.html"]{color:#2F6FC4}:root[data-theme="dark"] .appnav a[href="mof.html"]{color:#7FB2FF}:root[data-theme="dark"] .bnav a[href="mof.html"]{color:#7FB2FF}
+/*mof-nav-fit*/@media(max-width:430px){.appnav a{padding:6px 5px;font-size:13.5px}.navrow{gap:0}}@media(max-width:340px){.appnav a{padding:6px 4px;font-size:13px}}
+</style>
     <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 </head>
 
@@ -860,10 +862,10 @@
         <a href="journal.html">업무일지</a>
         <a href="duty.html">당직일지</a>
         <a href="schedule.html" aria-current="page">근무표</a>
-        <a href="docs.html">문서</a>
+        <a href="docs.html">문서</a><a href="mof.html">MOF</a>
         <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
     </nav>
-    <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html" aria-current="page">근무표</a><a href="docs.html">문서</a></div></nav>
+    <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="duty.html">당직일지</a><a href="schedule.html" aria-current="page">근무표</a><a href="docs.html">문서</a><a href="mof.html">MOF</a></div></nav>
     <script>(()=>{const b=document.querySelector('.bnav');if(!b||!matchMedia('(pointer: coarse)').matches)return;const t=e=>e.target&&e.target.matches&&e.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]),textarea');document.addEventListener('focusin',e=>{if(t(e))b.classList.add('hide')});const show=()=>setTimeout(()=>{if(!t({target:document.activeElement}))b.classList.remove('hide')},60);document.addEventListener('focusout',show);document.addEventListener('blur',show,true)})();</script>
     <div class="gate" id="gate" hidden>
         <form class="gatebox" id="gateForm">
