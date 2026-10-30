@@ -135,6 +135,9 @@ details.card[open] summary{border-bottom:1px solid var(--line)}
 .btn:disabled{opacity:.45;cursor:default}
 #bar.onsheet .btn{flex:1}
 .inp input.rej{outline:2px solid #D64545;outline-offset:1px}
+.mofhint{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mofhint b{color:var(--ink)}
+.mofhint button{height:30px;padding:0 10px;border:1px solid var(--field-line);border-radius:8px;background:none;font-size:12.5px;font-weight:700;cursor:pointer}
 .hint{font-size:12.5px;color:var(--muted);margin:0}
 
 @media (max-width:440px){
@@ -552,11 +555,52 @@ async function pull(full){
   if(changed){ saveCache(); if(!dirty) loadDate(curDate, true); else { renderCalcs(); renderProg(); } renderHistory(); }
 }
 
+/* ---- MOF 계산값(금일 사용량 유효)을 전력 칸에 채우기 ----
+   MOF 화면(config 'mof:날짜')의 금일지침·전일지침으로 (4+5+6번 검침차 ×720) 합을 구한다.
+   전력 칸이 비어 있거나 이전에 MOF에서 채운 값이면 자동으로 채우고, 직접 입력한 값은 덮어쓰지 않는다(안내 + [적용] 버튼). */
+let mofDocs = {};
+const r6m = x => Math.round(x * 1e6) / 1e6;
+function mofElecFor(date){
+  const d = mofDocs[date]; if(!d || !Array.isArray(d.k)) return null;
+  const P = mofDocs[addDays(date, -1)]; let sum = 0;
+  for(let i = 0; i < 3; i++){
+    const k = num(d.k[i]);
+    const lo = d.l && d.l[i] != null && d.l[i] !== '' ? num(d.l[i]) : (P && Array.isArray(P.k) ? num(P.k[i]) : null);
+    if(k == null || lo == null) return null;
+    sum += r6m(720 * r6m(k - lo));
+  }
+  return r6m(sum);
+}
+async function pullMof(){
+  const rows = await sb('config?select=key,data&key=like.' + encodeURIComponent('mof:20*') + '&order=key.desc&limit=200');
+  const next = {}; (rows || []).forEach(r => { next[r.key.slice(4)] = r.data || {}; });
+  mofDocs = next; applyMof();
+}
+function applyMof(){
+  const hint = $('mofhint-elec'); if(!hint || !cur) return;
+  const v = mofElecFor(cur.date);
+  if(v == null){ hint.hidden = true; return; }
+  const el = $('m-elec'), raw = cur.meters.elec, from = cur.src && cur.src.elec === 'mof';
+  if((raw === '' || raw == null || (from && num(raw) !== v)) && document.activeElement !== el){
+    cur.meters.elec = String(v); cur.src = Object.assign({}, cur.src, {elec: 'mof'}); el.value = cur.meters.elec; renderCalcs(); scheduleSave();
+  }
+  const same = num(cur.meters.elec) === v, auto = cur.src && cur.src.elec === 'mof';
+  hint.hidden = false;
+  hint.innerHTML = same ? (auto ? 'MOF <b>금일 사용량 ' + v + '</b> 자동 입력됨' : 'MOF 금일 사용량 ' + v + ' · 같은 값입니다')
+                        : 'MOF 금일 사용량 <b>' + v + '</b> <button type="button" id="mofApply">적용</button>';
+}
+document.addEventListener('click', e => {
+  if(!e.target || e.target.id !== 'mofApply') return;
+  const v = mofElecFor(cur.date); if(v == null) return;
+  cur.meters.elec = String(v); cur.src = Object.assign({}, cur.src, {elec: 'mof'}); $('m-elec').value = cur.meters.elec; renderCalcs(); scheduleSave(); applyMof();
+});
+
 async function sync(full){
   if(!configured()) return;
   try{
     const n = await flushPending();
     await pull(full);
+    try{ await pullMof(); }catch(e){ if(e && (e.status === 401 || e.status === 403)) throw e; }
     online = true;
     setSync('on', (n ? '전송 완료 ' : '동기화됨 ') + new Date().toTimeString().slice(0,5));
   }catch(e){
@@ -655,7 +699,7 @@ function loadDate(date, fromRemote){
     applyDefaults(cur);
   }
   if(fromRemote && document.activeElement && document.activeElement.closest('#p-input') && logs[date]){ renderCalcs(); renderMsgs(); renderProg(); renderPrev(); return; }
-  fillForm(); renderCalcs(); renderMsgs(); renderProg(); renderPrev();
+  fillForm(); renderCalcs(); renderMsgs(); renderProg(); renderPrev(); if(typeof applyMof==='function') applyMof();
   $('monthlyBox').open = isMonthEnd(date) || MONTHLY.some(m => num(cur.monthly[m.k])!=null);
   if(!$('p-sheet').hidden) renderSheet();
   autoWeather(date);
@@ -680,6 +724,7 @@ function buildForm(){
         <span class="inp"><input id="m-${m.k}" class="req" inputmode="decimal" autocomplete="off" placeholder="입력"></span></div>
       <div class="res" id="res-${m.k}"></div>
       <div class="err" id="err-${m.k}" hidden></div>
+      ${m.k==='elec'?'<div class="mofhint" id="mofhint-elec" hidden></div>':''}
     </div>`).join('');
   $('nums').innerHTML = NUMS.map(it => `
     <div class="row"><label class="lb" for="pt-${it.k}">${esc(it.short||it.l)}${it.hint?`<small>기준 ${esc(it.hint)}</small>`:''}</label>
@@ -694,7 +739,7 @@ function buildForm(){
       <span class="inp"><input id="mo-${m.k}" class="req" inputmode="decimal" autocomplete="off"><span class="u">${m.unit}</span></span></div>`).join('');
 
   ['weather','tHi','tLo','notes'].forEach(k => $(k).addEventListener('input', e => { cur[k]=e.target.value; if(k==='worker') store.set('dutylog.worker', e.target.value); scheduleSave(); }));
-  METERS.forEach(m => $('m-'+m.k).addEventListener('input', e => { cur.meters[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
+  METERS.forEach(m => $('m-'+m.k).addEventListener('input', e => { cur.meters[m.k]=e.target.value.trim(); if(m.k==='elec' && cur.src) delete cur.src.elec; renderCalcs(); scheduleSave(); if(typeof applyMof==='function') applyMof(); }));
   RUN.forEach(r => $('r-'+r.k).addEventListener('input', e => { cur.run[r.k]=e.target.value; scheduleSave(); }));
   MONTHLY.forEach(m => $('mo-'+m.k).addEventListener('input', e => { cur.monthly[m.k]=e.target.value.trim(); renderCalcs(); scheduleSave(); }));
   NUMS.forEach(it => { const el=$('pt-'+it.k); el.addEventListener('input', e => { if(it.lim) limitInput(el,it); cur.patrol[it.k]=e.target.value.trim(); markRange(el,it); scheduleSave(); }); });
