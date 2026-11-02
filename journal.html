@@ -80,7 +80,16 @@ mark.cur{background:#FF9F1A;color:#111;outline:2px solid #FF9F1A}
 :root{--cDefault:var(--ink);--cOrange:#B84A00;--cRed:#C62828;--cGreen:#1B7F3B;--cBlue:#1E5FBF}
 :root[data-theme="dark"]{--cOrange:#FF9F43;--cRed:#FF8A80;--cGreen:#6FD38A;--cBlue:#8AB4FF}
 .nsec{--c:var(--cDefault)}.nsec.c-orange{--c:var(--cOrange)}.nsec.c-red{--c:var(--cRed)}.nsec.c-green{--c:var(--cGreen)}.nsec.c-blue{--c:var(--cBlue)}
-.nsec + .nsec{margin-top:18px}
+.nsec{display:none}.nsec.on{display:block;animation:nInR .24s ease}.nsec.on.fromL{animation-name:nInL}
+@keyframes nInR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes nInL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.nsec.on{animation:none}}
+.ntabs{display:flex;gap:6px;overflow-x:auto;margin:0 -4px 12px;padding:2px 4px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ntabs::-webkit-scrollbar{display:none}
+.ntab{flex:none;max-width:60vw;height:34px;padding:0 13px;border:2px solid var(--c);border-radius:999px;background:none;color:var(--c);font:inherit;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ntab[aria-selected="true"]{background:var(--c);color:var(--surface)}
+.ntab.c-orange{--c:var(--cOrange)}.ntab.c-red{--c:var(--cRed)}.ntab.c-green{--c:var(--cGreen)}.ntab.c-blue{--c:var(--cBlue)}.ntab{--c:var(--cDefault)}
+.ntab.has::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-left:7px;vertical-align:middle;opacity:.7}
 .nsec .nh{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--c);padding-bottom:6px;margin-bottom:8px}
 .nsec .nt{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:15px;font-weight:800;color:var(--c);padding:4px 0;border-radius:4px}
 .nsec .nt:focus{outline:none;background:var(--surface)}
@@ -167,6 +176,7 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
   </section>
   <section id="notes" aria-label="업무일지"></section>
   <section class="notice" id="notice" aria-label="전달사항 · 지시사항">
+    <div class="ntabs" id="ntabs" role="tablist" aria-label="전달사항 구역"></div>
     <div id="nsecs"></div>
     <div class="nfoot"><button type="button" class="btn small" id="nAdd">추가</button><span class="savestate" id="noticeState"></span></div>
   </section>
@@ -314,7 +324,7 @@ function renderMsgs(){
 const NKEY = 'journal:notices', NLEG = 'journal:notice';
 const NCOLORS = ['default','orange','red','green','blue'], NCNAME = {default:'기본',orange:'주황',red:'빨강',green:'초록',blue:'파랑'};
 const nbox = $('nsecs');
-let nsecs = [], nPend = false, nVer = 0, nTyped = 0, nTimer = null, nBusy = false, nSig = '', nLegacyDone = false;
+let nActive = store.get('journal.nActive') || '', nTabSig = '', nsecs = [], nPend = false, nVer = 0, nTyped = 0, nTimer = null, nBusy = false, nSig = '', nLegacyDone = false;
 const nSave = () => { store.set('journal.notices', JSON.stringify(nsecs)); store.set('journal.noticesPending', nPend ? '1' : '0'); };
 const nDefaults = legacy => [{id:'n1', title:'전달사항', color:'default', text:legacy || '', u:0}, {id:'n2', title:'팀장 지시사항', color:'orange', text:'', u:0}];
 (function nInit(){
@@ -341,6 +351,24 @@ const nAuto = ta => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.sc
 function nSecHTML(x){
   return `<div class="nsec c-${NCOLORS.includes(x.color) ? x.color : 'default'}" data-id="${esc(x.id)}"><div class="nh"><input class="nt" maxlength="40" value="${esc(x.title)}" aria-label="구역 이름" placeholder="구역 이름"><button type="button" class="ncol" aria-label="글자색 바꾸기" title="글자색: ${NCNAME[x.color] || '기본'} (누르면 바뀜)"></button><button type="button" class="ndel" aria-label="이 구역 삭제">삭제</button></div><textarea class="nta" maxlength="20000" spellcheck="false" placeholder="내용을 입력하세요" aria-label="${esc(x.title)} 내용"></textarea></div>`;
 }
+function nTabs(){
+  const vis = nVisible(), bx = $('ntabs');
+  const sig = JSON.stringify(vis.map(x => [x.id, x.title, x.color, !!(x.text || '').trim()])) + '|' + nActive;
+  if(sig === nTabSig) return; nTabSig = sig;
+  bx.innerHTML = vis.map(x => `<button type="button" role="tab" class="ntab c-${NCOLORS.includes(x.color) ? x.color : 'default'}${(x.text || '').trim() ? ' has' : ''}" data-id="${esc(x.id)}" aria-selected="${x.id === nActive}">${esc(x.title || '이름 없음')}</button>`).join('');
+  const on = bx.querySelector('[aria-selected="true"]'); if(on && on.scrollIntoView) on.scrollIntoView({inline:'nearest', block:'nearest'});
+}
+function nShow(id, dir){
+  const vis = nVisible(); if(!vis.length){ nTabs(); return; }
+  if(!vis.some(x => x.id === id)) id = vis[0].id;
+  const was = nActive; nActive = id; try{ store.set('journal.nActive', id); }catch(e){}
+  nbox.querySelectorAll('.nsec').forEach(el => {
+    const on = el.dataset.id === id, had = el.classList.contains('on');
+    el.classList.toggle('on', on); el.classList.remove('fromL'); el.style.animation = dir === 0 ? 'none' : '';
+    if(on && !had){ if(dir < 0) el.classList.add('fromL'); const ta = el.querySelector('.nta'); if(ta) nAuto(ta); }
+  });
+  nTabs();
+}
 function nRender(force){
   const vis = nVisible(), sig = JSON.stringify(vis.map(x => [x.id, x.title, x.color]));
   const inside = nbox.contains(document.activeElement);
@@ -348,19 +376,28 @@ function nRender(force){
     if(inside && !force){ nSig = ''; return; }                   // 입력 중에는 구조를 바꾸지 않음(끝나면 다시 그림)
     nbox.innerHTML = vis.length ? vis.map(nSecHTML).join('') : '<div class="nempty">구역이 없습니다. 아래에서 추가하세요.</div>';
     nSig = sig;
+    nShow(nActive, 0);
   }
+  nTabs();
   vis.forEach(x => {
     const el = nbox.querySelector(`.nsec[data-id="${CSS.escape(x.id)}"]`); if(!el) return;
     const ta = el.querySelector('.nta');
     if(ta !== document.activeElement && Date.now() - nTyped > 2500 && ta.value !== x.text) ta.value = x.text;
     nAuto(ta);
   });
+  if(!nbox.querySelector('.nsec.on') && vis.length) nShow(nActive, 0);
 }
 function nTouch(x){ x.u = Date.now(); nPend = true; nVer++; nTyped = Date.now(); nSave(); $('noticeState').textContent = '입력 중…'; clearTimeout(nTimer); nTimer = setTimeout(nFlush, 800); }
+$('ntabs').addEventListener('click', e => {
+  const b = e.target.closest('.ntab'); if(!b || b.dataset.id === nActive) return;
+  const vis = nVisible(), a = vis.findIndex(x => x.id === nActive), n = vis.findIndex(x => x.id === b.dataset.id);
+  if(nbox.contains(document.activeElement) && nPend) nFlush();
+  nShow(b.dataset.id, n < a ? -1 : 1);
+});
 nbox.addEventListener('input', e => {
   const el = e.target.closest('.nsec'); if(!el) return; const x = nsecs.find(y => y.id === el.dataset.id); if(!x) return;
-  if(e.target.classList.contains('nta')){ x.text = e.target.value; nAuto(e.target); }
-  else if(e.target.classList.contains('nt')){ x.title = e.target.value; nSig = JSON.stringify(nVisible().map(y => [y.id, y.title, y.color])); }
+  if(e.target.classList.contains('nta')){ x.text = e.target.value; nAuto(e.target); nTabs(); }
+  else if(e.target.classList.contains('nt')){ x.title = e.target.value; nSig = JSON.stringify(nVisible().map(y => [y.id, y.title, y.color])); nTabs(); }
   nTouch(x);
 });
 nbox.addEventListener('click', e => {
@@ -374,7 +411,7 @@ nbox.addEventListener('click', e => {
 });
 nbox.addEventListener('focusout', () => { if(nPend) nFlush(); setTimeout(() => { if(!nbox.contains(document.activeElement)) nRender(false); }, 60); });
 $('nAdd').addEventListener('click', () => {
-  const x = {id: nNewId(), title: '새 구역', color: 'default', text: '', u: Date.now()}; nsecs.push(x); nTouch(x); nRender(true);
+  const x = {id: nNewId(), title: '새 구역', color: 'default', text: '', u: Date.now()}; nsecs.push(x); nActive = x.id; nTouch(x); nRender(true); nShow(x.id, 1);
   const t = nbox.querySelector(`.nsec[data-id="${CSS.escape(x.id)}"] .nt`); if(t){ t.focus(); t.select(); }
 });
 async function nFetch(key){ return sb('config?key=eq.' + encodeURIComponent(key) + '&select=data'); }
