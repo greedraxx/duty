@@ -66,6 +66,7 @@ main{padding-block:0 90px}
 :root[data-theme="dark"] .day.sat h3{border-left-color:#6EA8FF}:root[data-theme="dark"] .day.sun h3{border-left-color:#FF8A80}:root[data-theme="dark"] .day.sat h3 .w{color:#6EA8FF}:root[data-theme="dark"] .day.sun h3 .w{color:#FF8A80}
 .day h3 small{font-weight:500;color:var(--muted);font-size:12px}
 .day.today h3::after{content:"오늘";font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px}
+.day h3{flex-wrap:wrap}.day h3 .fx{text-wrap:balance;order:3;flex:0 0 100%;text-align:right;font-size:11.5px;font-weight:500;line-height:1.35;color:var(--muted)}
 .day h3 .crew{order:1;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:12.5px;font-weight:700;line-height:1.3;text-align:right}
 .day h3 .crew i{font-style:normal;font-weight:500;font-size:11.5px;margin-right:2px}
 .crew .cd i{color:#7E5700;font-weight:700}.crew .cn i{color:#16692C;font-weight:700}
@@ -532,6 +533,13 @@ function crewOf(d){
   });
   return out;
 }
+/* 고정 업무: 요일별(주간) · 매월 특정일(월간). 바꾸려면 아래 목록을 고칩니다. */
+const FIX_WEEK = {1:['의료폐기물 수거','3,6,9층 테라스 급수 점검'], 2:['의료폐기물박스 재고조사','지하3층 펌프점검'], 3:['3,6,9층 테라스 급수 점검'], 4:['13층 주방 가스누수점검','옥상점검(냉각탑,배기휀)'], 5:['3,6,9층 테라스 급수 점검']};
+const FIX_MONTH = {1:['보안순찰일지게시']};
+function fixedHTML(d){
+  const dt = parseD(d), list = [...(FIX_WEEK[dt.getDay()] || []), ...(FIX_MONTH[dt.getDate()] || [])];
+  return list.length ? `<span class="fx">${list.map(esc).join(' · ')}</span>` : '';
+}
 function crewHTML(d){
   const c = crewOf(d); if(!c || (!c['주간'] && !c['당직'])) return '';
   return `<span class="crew">${c['주간'] ? `<span class="cd"><i>주간</i> ${esc(c['주간'])}</span>` : ''}${c['당직'] ? `<span class="cn"><i>당직</i> ${esc(c['당직'])}</span>` : ''}</span>`;
@@ -567,7 +575,7 @@ function heading(d){ const dt = parseD(d), y = dt.getFullYear(), cy = new Date()
   return `${dt.getMonth()+1}월 ${dt.getDate()}일 <span class="w">${WD[dt.getDay()]}요일</span>` + (y !== cy ? `<small>${y}년</small>` : ''); }
 function dayHTML(d){
   const b = bodyOf(d);
-  return `<section class="day${d === todayStr() ? ' today' : ''}${[' sun','','','','','',' sat'][parseD(d).getDay()]}" data-d="${d}"><h3>${heading(d)}${crewHTML(d)}</h3><div class="txt${b ? '' : ' ph'}">${b ? hlHtml(b) : '탭하여 입력'}</div></section>`;
+  return `<section class="day${d === todayStr() ? ' today' : ''}${[' sun','','','','','',' sat'][parseD(d).getDay()]}" data-d="${d}"><h3>${heading(d)}${crewHTML(d)}${fixedHTML(d)}</h3><div class="txt${b ? '' : ' ph'}">${b ? hlHtml(b) : '탭하여 입력'}</div></section>`;
 }
 function allDates(){
   const s = new Set([...extra, todayStr()]);
