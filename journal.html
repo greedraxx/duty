@@ -75,6 +75,7 @@ main{padding-block:0 90px}
 :root[data-theme="dark"] .crew .cd i{color:#FFD43B}:root[data-theme="dark"] .crew .cn i{color:#6FD38A}
 .day.flash{animation:flash 1.4s ease-out}
 @keyframes flash{0%{background:var(--mark)}100%{background:transparent}}
+.txt{max-width:66ch}.day textarea{max-width:calc(66ch + 22px)}
 .txt{white-space:pre-wrap;word-break:break-word;font-size:16px;line-height:1.7;min-height:1.7em;cursor:text;-webkit-tap-highlight-color:transparent}
 .txt.ph{color:var(--muted)}
 .day textarea{display:block;width:100%;border:1px solid var(--ink);border-radius:8px;padding:8px 10px;margin:-1px;background:var(--surface);font-size:15.5px;line-height:1.6;resize:none;overflow:hidden;min-height:3.4em}
@@ -602,6 +603,31 @@ function refreshDay(d){                      // 한 날짜만 다시 그림 (없
     if(next) next.insertAdjacentHTML('beforebegin', dayHTML(d)); else notes.insertAdjacentHTML('beforeend', dayHTML(d));
   }
 }
+/* 한 줄 최대 65칸(숫자·영문 1칸, 한글·한자·전각 2칸). 넘으면 공백에서, 공백이 없으면 그 자리에서 줄을 바꿉니다. */
+const LINE_MAX = 65;
+function cw(cp){ return (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || cp >= 0x1F300 ? 2 : 1; }
+function wrapText(text, caret){
+  const lines = String(text).split('\n'), out = []; let pos = 0, newCaret = caret == null ? null : caret;
+  const bump = (at, n) => { if(newCaret != null && at <= caret) newCaret += n; };
+  lines.forEach((line, li) => {
+    const chars = Array.from(line), starts = []; let k = 0; chars.forEach(c => { starts.push(k); k += c.length; });
+    const ws = chars.map(c => cw(c.codePointAt(0))); let total = 0; ws.forEach(x => total += x);
+    if(total <= LINE_MAX){ out.push(line); pos += line.length + 1; return; }
+    let buf = '', seg = 0, w = 0, lastSp = -1;                 // seg: 현재 줄의 시작(글자 번호)
+    for(let i = 0; i < chars.length; i++){
+      while(w + ws[i] > LINE_MAX){
+        if(lastSp > seg){                                         // 공백에서 줄바꿈(공백 한 칸이 줄바꿈으로 바뀌어 글자 위치는 그대로)
+          out.push(chars.slice(seg, lastSp).join('')); seg = lastSp + 1;
+        } else { out.push(chars.slice(seg, i).join('')); bump(pos + starts[i], 1); seg = i; }
+        w = 0; for(let j = seg; j < i; j++) w += ws[j];
+        lastSp = -1; for(let j = seg; j < i; j++) if(chars[j] === ' ') lastSp = j;
+      }
+      w += ws[i]; if(chars[i] === ' ') lastSp = i;
+    }
+    out.push(chars.slice(seg).join('')); pos += line.length + 1;
+  });
+  return {text: out.join('\n'), caret: newCaret};
+}
 function autosize(ta){ ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
 function offsetAt(txt, x, y){                // 탭한 위치를 글자 번호로 (캐럿을 그 자리에 놓기 위해)
   try{
@@ -621,7 +647,13 @@ function startEdit(d, off){
   ta.value = bodyOf(d); ta.placeholder = '-내용을 입력하세요\n ㄴ세부 내용'; ta.maxLength = 30000; ta.spellcheck = false; ta.setAttribute('aria-label', '업무일지 내용');
   txt.replaceWith(ta); autosize(ta); ta.focus({preventScroll: true});
   const p = off == null ? ta.value.length : Math.min(off, ta.value.length); ta.setSelectionRange(p, p);
-  ta.addEventListener('input', () => {
+  const fit = () => {                                             // 65칸 넘는 줄은 다음 줄로
+    const w = wrapText(ta.value, ta.selectionStart); if(w.text === ta.value) return;
+    const sy = ta.scrollTop; ta.value = w.text; ta.setSelectionRange(w.caret, w.caret); ta.scrollTop = sy;
+  };
+  ta.addEventListener('compositionend', () => { fit(); ta.dispatchEvent(new Event('input')); });
+  ta.addEventListener('input', e => {
+    if(!e.isComposing) fit();                                    // 한글 조합 중에는 건드리지 않음
     typedAt = Date.now(); const v = ta.value; autosize(ta);
     pending[d] = v; savePending(); $('saveState').textContent = '입력 중…'; status();
     clearTimeout(saveTimer); saveTimer = setTimeout(doSave, 800);

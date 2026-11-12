@@ -27,9 +27,25 @@ function cleanItem(line){
   if(line.replace(/^\s+/, '').indexOf('ㄴ') === 0) return line;
   return line.replace(/^(\s*)-\s?/, '$1');
 }
+/* 한 줄 최대 65칸(숫자·영문 1칸, 한글·한자·전각 2칸). 넘으면 공백에서, 없으면 그 자리에서 줄바꿈 (journal.html의 wrapText와 같은 규칙) */
+var LINE_MAX = 65;
+function cw(cp){ return (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || cp >= 0x1F300 ? 2 : 1; }
+function wrap65(line){
+  var chars = Array.from(line), ws = chars.map(function(c){ return cw(c.codePointAt(0)); }), total = 0, out = [], seg = 0, wd = 0, lastSp = -1, i, j;
+  ws.forEach(function(x){ total += x; }); if(total <= LINE_MAX) return [line];
+  for(i = 0; i < chars.length; i++){
+    while(wd + ws[i] > LINE_MAX){
+      if(lastSp > seg){ out.push(chars.slice(seg, lastSp).join('')); seg = lastSp + 1; } else { out.push(chars.slice(seg, i).join('')); seg = i; }
+      wd = 0; for(j = seg; j < i; j++) wd += ws[j];
+      lastSp = -1; for(j = seg; j < i; j++) if(chars[j] === ' ') lastSp = j;
+    }
+    wd += ws[i]; if(chars[i] === ' ') lastSp = i;
+  }
+  out.push(chars.slice(seg).join('')); return out;
+}
 function linesOf(text){
   var out = [], raw = String(text == null ? '' : text).split(/\r\n|\r|\n/);
-  for(var i = 0; i < raw.length; i++){ var l = raw[i]; if(l.trim() === '') continue; out.push(cleanItem(l)); }
+  for(var i = 0; i < raw.length; i++){ var l = raw[i]; if(l.trim() === '') continue; wrap65(cleanItem(l)).forEach(function(x){ out.push(x); }); }
   return out;
 }
 function esc(s){
