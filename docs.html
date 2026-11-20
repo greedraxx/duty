@@ -70,6 +70,13 @@ main{padding-block:12px 60px}
 .meta{font-size:12.5px;color:var(--muted);word-break:break-all}
 .note{font-size:13px}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.usage{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:13px}
+.usage .bar2{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:6px 0}
+.usage .bar2 i{display:block;height:100%;background:var(--accent,#2563eb)}
+.usage.warn .bar2 i{background:#d97706}
+.usage.crit .bar2 i{background:var(--bad)}
+.usage small{color:var(--muted);display:block;line-height:1.5}
 .empty{color:var(--muted);text-align:center;padding:30px 14px}
 .toggle{margin-top:14px;font-size:13px;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer;padding:0}
 
@@ -141,6 +148,7 @@ main{padding-bottom:calc(var(--bnav-h) + 60px)}
     <h1>시설팀 문서</h1>
     <button type="button" class="btn primary" id="uploadBtn">문서 올리기</button>
   </div>
+  <div class="usage" id="usage" hidden></div>
   <label class="search"><input id="q" type="search" placeholder="제목·분류·메모·파일명 검색" autocomplete="off" aria-label="문서 검색"></label>
   <div class="chips" id="chips"></div>
 </div></header>
@@ -237,11 +245,27 @@ async function load(){
     }
     docs = rows; loaded = true;
     setSync('on', '연결됨 ' + new Date().toTimeString().slice(0,5));
+    loadUsage();
   }catch(e){
     setSync('off', loaded ? '연결 끊김(목록은 마지막 상태)' : '연결 안 됨');
     if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.');
   }
   render();
+}
+
+/* ---------- 서버 사용량 (Supabase 무료 플랜: DB 500MB) ---------- */
+const FREE_DB_BYTES = 500 * 1024 * 1024;
+async function loadUsage(){
+  const box = $('usage');
+  try{
+    const u = await sb('rpc/usage_stats', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    const used = Number(u.db_bytes), left = Math.max(0, FREE_DB_BYTES - used), pct = used / FREE_DB_BYTES * 100;
+    box.className = 'usage' + (pct >= 90 ? ' crit' : pct >= 70 ? ' warn' : '');
+    box.innerHTML = `<b>서버 용량</b> · 사용 ${fmtSize(used)} / ${fmtSize(FREE_DB_BYTES)} (${pct.toFixed(1)}%) · 남음 ${fmtSize(left)}
+      <div class="bar2"><i style="width:${Math.min(100, pct).toFixed(1)}%"></i></div>
+      <small>문서 ${u.docs_count}개 · 원본 합계 ${fmtSize(Number(u.docs_bytes))} (서버에는 약 33% 더 큰 형태로 저장). 한도 500MB는 Supabase 무료 플랜 공식 문서 기준이며, 초과하면 읽기 전용이 됩니다. 삭제한 공간은 서버 정리 후 반영됩니다. 전송량(월 5GB)은 여기에 포함되지 않습니다.</small>`;
+    box.hidden = false;
+  }catch(e){ box.hidden = true; }
 }
 
 function cats(){
@@ -270,10 +294,11 @@ function render(){
       <div class="meta">${esc(d.file_name)} · ${fmtSize(d.size)} · ${fmtDate(d.created_at)}${d.hidden ? ' · 숨김' : ''}</div>
       ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
       <div class="acts">
-        ${kindOf(d) === 'other' ? '' : '<button type="button" class="btn small primary" data-a="open">열람</button>'}
+        ${kindOf(d) === 'other' ? '' : '<button type="button" class="btn small primary" data-a="open">보기</button>'}
         <button type="button" class="btn small" data-a="save">내려받기</button>
         <button type="button" class="btn small" data-a="edit">수정</button>
         <button type="button" class="btn small" data-a="hide">${d.hidden ? '복원' : '숨김'}</button>
+        <button type="button" class="btn small danger" data-a="del">삭제</button>
       </div>
     </div>`).join('') : (loaded ? `<div class="empty">${q || activeCat ? '검색 결과가 없습니다.' : '올린 문서가 없습니다. 위의 “문서 올리기”로 시작하세요.'}</div>` : '');
   const hiddenN = docs.filter(d => d.hidden).length;
@@ -391,6 +416,14 @@ $('list').addEventListener('click', async e => {
   if(a === 'open') openDoc(d, false, btn);
   else if(a === 'save') openDoc(d, true, btn);
   else if(a === 'edit'){ editId = id; $('edTitle').value = d.title; $('edCat').value = d.category; $('edNote').value = d.note; $('edMsg').textContent = ''; $('editPanel').hidden = false; $('uploadPanel').hidden = true; window.scrollTo(0, 0); $('edTitle').focus(); }
+  else if(a === 'del'){
+    if(!confirm('"' + d.title + '" 문서를 삭제할까요?\n\n서버에서 영구 삭제되며 되돌릴 수 없습니다.\n(되돌릴 수 있게 감추려면 "숨김"을 쓰세요.)')) return;
+    btn.disabled = true;
+    try{
+      await sb('rpc/delete_doc', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({p_id: id})});
+      docs = docs.filter(x => x.id !== id); render(); loadUsage();
+    }catch(err){ btn.disabled = false; alert('삭제하지 못했습니다. 연결과 팀 코드를 확인하세요.'); }
+  }
   else if(a === 'hide'){
     const hidden = !d.hidden;
     try{ await sb('docs?id=eq.' + id, {method:'PATCH', headers:{'Content-Type':'application/json', Prefer:'return=minimal'}, body: JSON.stringify({hidden})}); d.hidden = hidden; render(); }

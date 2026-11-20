@@ -50,3 +50,17 @@ drop policy if exists chunks_select on public.doc_chunks;
 drop policy if exists chunks_insert on public.doc_chunks;
 create policy chunks_select on public.doc_chunks for select to anon using (public.team_check());
 create policy chunks_insert on public.doc_chunks for insert to anon with check (public.team_check());
+
+-- 삭제·사용량 함수 (문서 삭제 버튼, 서버 용량 표시)
+create or replace function public.delete_doc(p_id uuid) returns integer language plpgsql security definer set search_path='' as $$
+declare n integer;
+begin
+  if not public.team_check() then raise exception 'forbidden' using errcode='42501'; end if;
+  delete from public.doc_chunks where doc_id=p_id; delete from public.docs where id=p_id;
+  get diagnostics n = row_count; return n; end $$;
+create or replace function public.usage_stats() returns json language plpgsql stable security definer set search_path='' as $$
+begin
+  if not public.team_check() then raise exception 'forbidden' using errcode='42501'; end if;
+  return json_build_object('db_bytes',pg_database_size(current_database()),'docs_bytes',coalesce((select sum(size) from public.docs),0),'docs_count',(select count(*) from public.docs),'stored_bytes',coalesce((select sum(pg_column_size(c.data)) from public.doc_chunks c),0)); end $$;
+revoke all on function public.delete_doc(uuid) from public; revoke all on function public.usage_stats() from public;
+grant execute on function public.delete_doc(uuid) to anon; grant execute on function public.usage_stats() to anon;
