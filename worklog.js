@@ -43,6 +43,20 @@ function wrap65(line){
   }
   out.push(chars.slice(seg).join('')); return out;
 }
+/* 하단 고정 내용(양식 편집 기능): [[글, 굵게?], ...] → 65칸 넘는 줄은 나누고, 개수·글자를 정리 */
+var FIXED_MAX_ROWS = 40;
+function normFixed(rows){
+  var out = [];
+  (Array.isArray(rows) ? rows : []).forEach(function(it){
+    var t = Array.isArray(it) ? it[0] : (it && it.t), b = Array.isArray(it) ? it[1] : (it && it.b);
+    t = String(t == null ? '' : t).replace(/[\r\n]+/g, ' ').replace(/\s+$/, ''); b = !!b;
+    if(t.trim() === ''){ out.push(['', false]); return; }
+    wrap65(t).forEach(function(x){ out.push([x, b]); });
+  });
+  out = out.slice(0, FIXED_MAX_ROWS);
+  if(out.length && out[out.length - 1][1]) out.push(['', false]);      // 마지막 줄은 양식의 닫는 테두리 서식이라 굵게가 안 먹으므로 빈 줄을 하나 더 둠
+  return out;
+}
 function linesOf(text){
   var out = [], raw = String(text == null ? '' : text).split(/\r\n|\r|\n/);
   for(var i = 0; i < raw.length; i++){ var l = raw[i]; if(l.trim() === '') continue; wrap65(cleanItem(l)).forEach(function(x){ out.push(x); }); }
@@ -60,7 +74,7 @@ function textCell(ref, s, text){
 }
 function colL(n){ return String.fromCharCode(64 + n); }           // 1..26 → A..Z
 
-function buildSheet(sheetXml, y, m, d, lines){
+function buildSheet(sheetXml, y, m, d, lines, fixed){
   var st = {
     left_normal: sOf(sheetXml,'B14'), left_bold: sOf(sheetXml,'B33'), left_close: sOf(sheetXml,'B45'),
     right_normal: sOf(sheetXml,'M14'), right_close: sOf(sheetXml,'M44'),
@@ -80,7 +94,7 @@ function buildSheet(sheetXml, y, m, d, lines){
     rows1to13 = rows1to13.replace(new RegExp('<c r="' + c + '10" s="(\\d+)" t="n"></c>'), '<c r="' + c + '10" s="$1"><v>' + STAFF[c] + '</v></c>');
   });
 
-  var merges = [], body = [], rows = lines.map(function(t){ return [t, false]; }).concat(FIXED), n = rows.length, r = CONTENT_START;
+  var merges = [], body = [], rows = lines.map(function(t){ return [t, false]; }).concat(fixed || FIXED), n = rows.length, r = CONTENT_START;
   rows.forEach(function(it, i){
     var text = it[0], bold = it[1], last = i === n - 1, cells = [];
     var b = last ? st.left_close : (bold ? st.left_bold : st.left_normal);
@@ -131,7 +145,7 @@ function build(JSZip, dateStr, text, opts){
   var y = +mt[1], m = +mt[2], d = +mt[3], lines = linesOf(text);
   return JSZip.loadAsync(A.template, {base64: true}).then(function(zip){
     return zip.file('xl/worksheets/sheet1.xml').async('string').then(function(sx){
-      var res = buildSheet(sx, y, m, d, lines);
+      var res = buildSheet(sx, y, m, d, lines, opts && opts.fixed ? normFixed(opts.fixed) : null);
       zip.file('xl/worksheets/sheet1.xml', res.xml, NF);
       return zip.file('xl/workbook.xml').async('string').then(function(wx){
         wx = wx.replace(/(<definedName name="_xlnm.Print_Area"[^>]*>)[^<]*(<\/definedName>)/, function(_, a, b){ return a + "'업무일지'!$A$1:$Q$" + res.lastRow + b; });
@@ -153,6 +167,6 @@ function build(JSZip, dateStr, text, opts){
     });
   });
 }
-var API = { build: build, linesOf: linesOf, cleanItem: cleanItem };
+var API = { build: build, linesOf: linesOf, cleanItem: cleanItem, normFixed: normFixed, defaultFixed: function(){ return FIXED.map(function(x){ return [x[0], x[1]]; }); }, FIXED_MAX_ROWS: FIXED_MAX_ROWS };
 if(typeof module !== 'undefined' && module.exports) module.exports = API; else root.Worklog = API;
 })(typeof window !== 'undefined' ? window : this);

@@ -120,6 +120,12 @@ mark.cur{background:#FF9F1A;color:#111;outline:2px solid #FF9F1A}
 .more{margin:10px auto;display:block}
 details.tools{margin:8px 0;border:1px solid var(--line);border-radius:10px;padding:0 14px}
 details.tools summary{cursor:pointer;padding:11px 0;font-weight:700;font-size:14px}
+.trow{display:flex;gap:4px;align-items:center;margin-bottom:5px}
+.trow input{flex:1;min-width:0;height:38px;padding:0 9px;border:1px solid var(--field-line);border-radius:8px;background:var(--surface);font-size:14.5px;white-space:pre}
+.trow input.b{font-weight:800}.trow input.long{border-color:#c0392b;outline:1px solid #c0392b}
+.trow button{flex:none;width:34px;height:38px;border:1px solid var(--field-line);border-radius:8px;background:none;font-size:14px;font-weight:700;cursor:pointer}
+.trow button.on{background:var(--ink);color:var(--surface)}
+.tnote{font-size:12.5px;color:var(--muted);margin:0 0 8px}
 .tl{display:flex;flex-direction:column;gap:10px;padding:0 0 14px}
 .tl p{margin:0;font-size:13px;color:var(--muted)}
 .tl .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -195,7 +201,13 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
       <p>선택한 날짜의 업무일지를 기존 엑셀 양식에 채워서 내려받습니다. 날짜와 업무내용 <b>(14행부터)</b> 외의 칸은 양식 그대로 비워 둡니다.</p>
       <div class="row"><label class="ck">날짜 <input type="date" id="xlDate"></label></div>
       <div id="xlInfo" class="rcount"></div>
-      <div class="row"><button type="button" class="btn primary" id="xlGo">저장(엑셀)</button></div>
+      <div class="row"><button type="button" class="btn primary" id="xlGo">저장(엑셀)</button><button type="button" class="btn" id="tplOpen" aria-expanded="false">하단 고정 내용 편집</button></div>
+      <div id="tplBox" hidden>
+        <p class="tnote">업무내용 아래에 항상 들어가는 줄입니다(야간 순찰, 병실 보수 진행상황 등). <b>B</b>를 누르면 굵은 제목 줄이 됩니다. 앞의 띄어쓰기는 들여쓰기로 그대로 나갑니다. 한 줄은 65칸(한글 2칸)까지이며 넘으면 엑셀에서 자동으로 나뉩니다.</p>
+        <div id="tplRows"></div>
+        <div class="row"><button type="button" class="btn small" id="tplAdd">+ 줄 추가</button><button type="button" class="btn small" id="tplBlank">+ 빈 줄</button><button type="button" class="btn small" id="tplReset">기본값으로</button></div>
+        <div class="row"><button type="button" class="btn primary" id="tplSave">양식 저장</button><span class="savestate" id="tplState"></span></div>
+      </div>
     </div>
   </details>
   <details class="tools" id="tools">
@@ -314,7 +326,7 @@ async function sync(withGate){
     if(ok === false){ showGate(withGate && teamCode() ? '팀 코드가 맞지 않습니다.' : ''); setSync('off', '팀 코드 필요'); return; }
     $('gate').hidden = true;
     await flush(); await nFlush();
-    await pull(); await nPull(); try{ await pullCrew(); }catch(e){ if(e.status === 401 || e.status === 403) throw e; }
+    await pull(); await nPull(); try{ await tplSync(); }catch(e){ if(e.status === 401 || e.status === 403) throw e; } try{ await pullCrew(); }catch(e){ if(e.status === 401 || e.status === 403) throw e; }
     loaded = true; online = true;
     if(firstLoad){ firstLoad = false; if(!userMoved) toToday(); }
   }catch(e){ online = false; if(e.status === 401 || e.status === 403) showGate('팀 코드가 맞지 않습니다.'); }
@@ -839,12 +851,66 @@ $('xlGo').addEventListener('click', async () => {
   const btn = $('xlGo'); btn.disabled = true; btn.textContent = '만드는 중…';
   try{
     await xlLoad();
-    const r = await window.Worklog.build(window.JSZip, d, bodyOf(d), {});
+    const r = await window.Worklog.build(window.JSZip, d, bodyOf(d), {fixed: tplRowsOrNull()});
     const a = document.createElement('a'); a.href = URL.createObjectURL(r.blob); a.download = r.name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
     $('xlInfo').textContent = `${r.name} 저장 · 업무 ${r.count}줄`;
   }catch(e){ $('xlInfo').textContent = '엑셀을 만들지 못했습니다: ' + (e && e.message || e); }
   btn.textContent = '저장(엑셀)'; xlInfo();
+});
+
+/* ---------- 하단 고정 내용(양식) 편집: 서버 config 'journal:template', 기기에도 보관 ---------- */
+const TKEY = 'journal:template';
+let tplRows = null, tplDirty = store.get('journal.tpl.dirty') === '1', tplDraft = null;
+try{ const c = JSON.parse(store.get('journal.tpl') || 'null'); if(c && Array.isArray(c.rows)) tplRows = c.rows; }catch(e){}
+const tplRowsOrNull = () => tplRows;                                  // null이면 내보내기가 기본 양식을 씁니다
+function tplClean(rows){ return rows.map(x => [String(x[0] == null ? '' : x[0]).replace(/[\r\n]+/g, ' ').slice(0, 200), !!x[1]]).slice(0, 40); }
+function tplLocalSave(rows, dirty){ tplRows = rows; store.set('journal.tpl', JSON.stringify({rows})); if(dirty) store.set('journal.tpl.dirty', '1'); else store.del('journal.tpl.dirty'); tplDirty = !!dirty; }
+async function tplPush(){
+  await sb('config?on_conflict=key', {method:'POST', headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{key: TKEY, data: {v: 1, rows: tplRows, u: Date.now()}}])});
+  tplLocalSave(tplRows, false);
+}
+async function tplSync(){
+  if(!configured()) return;
+  if(tplDirty && tplRows){ await tplPush(); return; }                  // 보내지 못한 내 양식이 우선
+  const rows = await sb('config?select=data&key=eq.' + encodeURIComponent(TKEY));
+  const d = rows && rows[0] && rows[0].data; if(!d || !Array.isArray(d.rows)) return;
+  const clean = tplClean(d.rows); if(JSON.stringify(clean) !== JSON.stringify(tplRows)){ tplLocalSave(clean, false); if(!$('tplBox').hidden && !tplEdited) tplDraw(clean); }
+}
+let tplEdited = false;
+function tplWidth(t){ let w = 0; for(const c of t.replace(/\s+$/, '')) w += cw(c.codePointAt(0)); return w; }
+function tplDraw(rows){
+  tplDraft = rows.map(x => [x[0], !!x[1]]); tplEdited = false;
+  $('tplRows').innerHTML = tplDraft.map((x, i) => `<div class="trow" data-i="${i}"><button type="button" class="tb${x[1] ? ' on' : ''}" title="굵게" aria-pressed="${x[1]}">B</button><input type="text" value="${esc(x[0])}" spellcheck="false" aria-label="${i + 1}번째 줄"><button type="button" class="tu" title="위로" aria-label="위로">↑</button><button type="button" class="td" title="아래로" aria-label="아래로">↓</button><button type="button" class="tx" title="삭제" aria-label="삭제">✕</button></div>`).join('');
+  $('tplRows').querySelectorAll('.trow input').forEach((el, i) => { el.classList.toggle('b', tplDraft[i][1]); el.classList.toggle('long', tplWidth(el.value) > LINE_MAX); });
+}
+function tplRead(){ return tplDraft.map((x, i) => { const el = $('tplRows').querySelectorAll('.trow input')[i]; return [el ? el.value : x[0], x[1]]; }); }
+$('tplOpen').addEventListener('click', async () => {
+  const open = $('tplBox').hidden; $('tplBox').hidden = !open; $('tplOpen').setAttribute('aria-expanded', String(open));
+  if(open){ try{ await xlLoad(); }catch(e){} tplDraw(tplRows || (window.Worklog ? window.Worklog.defaultFixed() : [])); $('tplState').textContent = ''; }
+});
+$('tplRows').addEventListener('input', e => { if(!e.target.matches('input')) return; tplEdited = true; const i = +e.target.closest('.trow').dataset.i; e.target.classList.toggle('long', tplWidth(e.target.value) > LINE_MAX); $('tplState').textContent = '저장하지 않은 변경이 있습니다'; });
+$('tplRows').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return; const row = b.closest('.trow'), i = +row.dataset.i, cur = tplRead();
+  if(b.classList.contains('tb')) cur[i][1] = !cur[i][1];
+  else if(b.classList.contains('tu')){ if(i === 0) return; [cur[i - 1], cur[i]] = [cur[i], cur[i - 1]]; }
+  else if(b.classList.contains('td')){ if(i === cur.length - 1) return; [cur[i + 1], cur[i]] = [cur[i], cur[i + 1]]; }
+  else if(b.classList.contains('tx')) cur.splice(i, 1);
+  else return;
+  tplDraw(cur); tplEdited = true; $('tplState').textContent = '저장하지 않은 변경이 있습니다';
+  const nb = $('tplRows').querySelectorAll('.trow')[Math.min(b.classList.contains('tu') ? i - 1 : b.classList.contains('td') ? i + 1 : i, cur.length - 1)]; if(nb && !b.classList.contains('tx')) nb.querySelector('input').focus({preventScroll: true});
+});
+function tplAddRow(text){ const cur = tplRead(); if(cur.length >= 40){ $('tplState').textContent = '최대 40줄까지입니다'; return; } cur.push([text, false]); tplDraw(cur); tplEdited = true; $('tplState').textContent = '저장하지 않은 변경이 있습니다'; const ins = $('tplRows').querySelectorAll('.trow input'); ins[ins.length - 1].focus(); }
+$('tplAdd').addEventListener('click', () => tplAddRow(''));
+$('tplBlank').addEventListener('click', () => tplAddRow(''));
+$('tplReset').addEventListener('click', async () => {
+  if(!confirm('하단 고정 내용을 처음 기본 양식으로 되돌릴까요?\n(저장을 눌러야 적용됩니다)')) return;
+  try{ await xlLoad(); }catch(e){} tplDraw(window.Worklog.defaultFixed()); tplEdited = true; $('tplState').textContent = '저장하지 않은 변경이 있습니다';
+});
+$('tplSave').addEventListener('click', async () => {
+  const rows = tplClean(tplRead()); tplLocalSave(rows, true); tplEdited = false; $('tplState').textContent = '저장 중…';
+  try{ if(configured()) await tplPush(); $('tplState').textContent = '저장됨 · 다음 엑셀부터 적용'; }
+  catch(e){ $('tplState').textContent = '기기에 보관 중 (연결되면 자동 저장)'; if(e && (e.status === 401 || e.status === 403)) showGate('팀 코드가 맞지 않습니다.'); }
 });
 
 /* ---------- 시작 ---------- */
