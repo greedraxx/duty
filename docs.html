@@ -51,6 +51,8 @@ h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .search{display:block;margin-top:12px}
 .search input{width:100%;height:44px;border:1px solid var(--field-line);border-radius:8px;padding:0 14px;background:var(--surface);font-size:16px}
 .search input:focus{outline:none;border-color:var(--ink)}
+.sortrow{margin-top:10px;font-size:13px;color:var(--muted)}
+.sortrow select{font:inherit;margin-left:6px;padding:4px 8px;border:1px solid var(--field-line);border-radius:8px;background:var(--bg,transparent);color:inherit}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .chip{border:1px solid var(--field-line);background:none;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -151,6 +153,7 @@ main{padding-bottom:calc(var(--bnav-h) + 60px)}
   <div class="usage" id="usage" hidden></div>
   <label class="search"><input id="q" type="search" placeholder="제목·분류·메모·파일명 검색" autocomplete="off" aria-label="문서 검색"></label>
   <div class="chips" id="chips"></div>
+  <div class="sortrow"><label>정렬 <select id="sortSel" aria-label="정렬"><option value="new">최신순</option><option value="old">오래된순</option><option value="size">용량 큰 순</option></select></label></div>
 </div></header>
 
 <main class="gut"><div class="wrap">
@@ -212,7 +215,7 @@ const $ = id => document.getElementById(id);
 const MAX_BYTES = 25 * 1024 * 1024;
 const CHUNK_BYTES = 510 * 1024;            // 원본 조각 크기 (base64 로 약 680KB)
 const DEFAULT_CATS = ['소방', '전기', '기계', '건축', '계약', '법정점검', '연락처', '기타'];
-let docs = [], showHidden = false, activeCat = '', editId = null, loaded = false;
+let sortKey = 'new', docs = [], showHidden = false, activeCat = '', editId = null, loaded = false;
 
 const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
 function configured(){ return !!(CFG.supabaseUrl && CFG.supabaseKey && !/YOUR_|여기에/.test(CFG.supabaseUrl + CFG.supabaseKey)); }
@@ -262,8 +265,7 @@ async function loadUsage(){
     const used = Number(u.db_bytes), left = Math.max(0, FREE_DB_BYTES - used), pct = used / FREE_DB_BYTES * 100;
     box.className = 'usage' + (pct >= 90 ? ' crit' : pct >= 70 ? ' warn' : '');
     box.innerHTML = `<b>서버 용량</b> · 사용 ${fmtSize(used)} / ${fmtSize(FREE_DB_BYTES)} (${pct.toFixed(1)}%) · 남음 ${fmtSize(left)}
-      <div class="bar2"><i style="width:${Math.min(100, pct).toFixed(1)}%"></i></div>
-      <small>문서 ${u.docs_count}개 · 원본 합계 ${fmtSize(Number(u.docs_bytes))} (서버에는 약 33% 더 큰 형태로 저장). 한도 500MB는 Supabase 무료 플랜 공식 문서 기준이며, 초과하면 읽기 전용이 됩니다. 삭제한 공간은 서버 정리 후 반영됩니다. 전송량(월 5GB)은 여기에 포함되지 않습니다.</small>`;
+      <div class="bar2"><i style="width:${Math.min(100, pct).toFixed(1)}%"></i></div>`;
     box.hidden = false;
   }catch(e){ box.hidden = true; }
 }
@@ -286,6 +288,10 @@ function render(){
   const q = $('q').value.trim().toLowerCase();
   const rows = docs.filter(d => (showHidden || !d.hidden) && (!activeCat || d.category === activeCat) &&
     (!q || [d.title, d.category, d.note, d.file_name].join(' ').toLowerCase().includes(q)));
+  const t = d => new Date(d.created_at).getTime();
+  if(sortKey === 'old') rows.sort((a, b) => t(a) - t(b));
+  else if(sortKey === 'size') rows.sort((a, b) => (b.size - a.size) || (t(b) - t(a)));
+  else rows.sort((a, b) => t(b) - t(a));
   $('count').textContent = loaded ? `${rows.length}건` + (q || activeCat ? ` (전체 ${docs.filter(d => showHidden || !d.hidden).length}건)` : '') : '';
   $('list').hidden = !rows.length && !loaded;
   $('list').innerHTML = rows.length ? rows.map(d => `
@@ -307,6 +313,9 @@ function render(){
 }
 
 $('q').addEventListener('input', render);
+try{ const sv = localStorage.getItem('docs.sort'); if(['new','old','size'].includes(sv)) sortKey = sv; }catch(e){}
+$('sortSel').value = sortKey;
+$('sortSel').addEventListener('change', () => { sortKey = $('sortSel').value; store.set('docs.sort', sortKey); render(); });
 $('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; activeCat = b.dataset.c; render(); });
 $('showHidden').addEventListener('click', () => { showHidden = !showHidden; render(); });
 
