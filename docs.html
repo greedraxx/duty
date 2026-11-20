@@ -133,9 +133,6 @@ table.xl a{color:inherit;font-weight:700}
 main{padding-bottom:calc(var(--bnav-h) + 60px)}
 .themebtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);cursor:pointer;padding:0}a + .themebtn{margin-left:auto}.sync + .themebtn{margin-left:6px}.navrow .sync{flex:1 1 0;min-width:0;justify-content:flex-end}.navrow .sync span:last-child{white-space:normal}.appnav a[href="mof.html"]{color:#2F6FC4}.bnav a[href="mof.html"]{color:#2F6FC4}:root[data-theme="dark"] .appnav a[href="mof.html"]{color:#7FB2FF}:root[data-theme="dark"] .bnav a[href="mof.html"]{color:#7FB2FF}
 /*mof-nav-fit*/@media(max-width:430px){.appnav a{padding:6px 5px;font-size:13.5px}.navrow{gap:0}}@media(max-width:340px){.appnav a{padding:6px 4px;font-size:13px}}
-.chartbtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;padding:0}.chartbtn[aria-current="page"]{background:var(--soft)}.appnav a.chartbtn{padding:0;border:1px solid var(--line)}.sync + .chartbtn{margin-left:6px}
-.chartbtn{flex:none;width:34px;height:34px;margin-left:6px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;padding:0}.chartbtn[aria-current="page"]{background:var(--soft)}.appnav a.chartbtn{padding:0;border:1px solid var(--line)}/*cb*/.sync + .chartbtn{margin-left:6px}.appnav .sync{min-width:0}@media(max-width:480px){.appnav .sync #syncText{display:none}.appnav .sync{flex:0 0 auto;margin-left:auto}.chartbtn{margin-left:4px}}
-/*cb2*/@media(max-width:400px){.appnav a{padding:6px 3px;font-size:13px}.chartbtn,.themebtn{width:30px;height:30px;margin-left:2px}.chartbtn svg{width:16px;height:16px}}@media(max-width:350px){.appnav a{padding:6px 2px;font-size:12.5px}.appnav{padding-left:10px;padding-right:10px}}
 </style>
 </head>
 <body>
@@ -145,7 +142,7 @@ main{padding-bottom:calc(var(--bnav-h) + 60px)}
   <a href="schedule.html">근무표</a>
   <a href="docs.html" aria-current="page">문서</a>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">연결 중…</span></span>
-<a class="chartbtn" href="usage.html" aria-label="사용량 그래프" title="사용량 그래프"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></a><button type="button" class="themebtn" id="themeBtn"></button></div></nav>
+<button type="button" class="themebtn" id="themeBtn"></button></div></nav>
 <nav class="bnav" aria-label="메뉴"><div class="in"><a href="journal.html">업무일지</a><a href="mof.html">MOF</a><a href="duty.html">당직일지</a><a href="schedule.html">근무표</a><a href="docs.html" aria-current="page">문서</a></div></nav>
 
 <header class="head gut"><div class="wrap">
