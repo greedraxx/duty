@@ -158,7 +158,7 @@ main{padding-bottom:calc(var(--bnav-h) + 70px)}
   <div class="basebar"><details class="opt" id="optBox">
     <summary id="baseSum">월누적 계산 기준 (전월 말 검침)</summary>
     <div class="in">
-      <p class="note">월누적 = (금일지침 − 전월 말 검침) × 720 입니다. 전월 말 값이 없으면 계산할 수 없어서 달마다 한 번만 넣습니다. 비워 두면 월누적 칸은 — 로 둡니다.</p>
+      <p class="note">월누적은 그 달 1일부터 매일의 사용량(×720)을 자동으로 더해서 구하고, 매달 1일에 새로 시작합니다. 아래 전월 말 검침은 그 달 1일 이전 기록이 없어서 자동 계산이 안 될 때만 쓰는 보조 값입니다(월누적 = (금일지침 − 전월 말 검침) × 720).</p>
       <table class="mt bs"><colgroup><col style="width:13%"><col></colgroup><tbody id="btb"></tbody></table>
     </div>
   </details></div>
@@ -308,6 +308,26 @@ function effL(d){                                           // 직접 고친 값
   const o = getArr(dayKey(d), 'l'), a = autoL(d) || blank5();
   return o.map((v, i) => v !== '' ? v : a[i]);
 }
+/* 월누적 = 그 달 1일부터 해당 날짜까지 '하루 사용량(×720)'의 합. 매달 1일에 새로 시작(1일치부터 합산)합니다.
+   하루 사용량 = 720 × (그날 금일지침 − 전일지침[직접 고친 값 > 직전 기록일 지침]). 기록이 빠진 날은 건너뛰고 다음 기록일이 이어서 계산합니다.
+   그 달에 필요한 기록이 모자라면(null) 예전 방식(전월 말 검침 기준)으로, 그것도 없으면 — 로 둡니다. */
+const fullK = a => a.every(v => num(v) != null);
+function monthCum(d){
+  const ym = d.slice(0, 7), days = Object.keys(docs).filter(k => /^mof:\d{4}-\d{2}-\d{2}$/.test(k)).map(k => k.slice(4)).filter(x => x <= d && docs[dayKey(x)] && getArr(dayKey(x), 'k').some(v => v !== '')).sort();
+  if(!days.length || days[days.length - 1] !== d || !fullK(getArr(dayKey(d), 'k'))) return null;
+  let act = 0, rea = 0, any = false;
+  for(let n = 0; n < days.length; n++){
+    const x = days[n]; if(x.slice(0, 7) !== ym) continue;
+    const first = !any;                                     // 그 달 첫 기록은 반드시 1일이고, 전일지침은 전월 마지막 날 값(또는 직접 입력)이어야 함 — 아니면 월초 사용량이 빠지거나 지난달 사용량이 섞이므로 계산하지 않음
+    if(first && x !== ym + '-01') return null;
+    const K = getArr(dayKey(x), 'k'), o = getArr(dayKey(x), 'l'), pv = n > 0 && (!first || days[n - 1] === prevOf(x)) ? getArr(dayKey(days[n - 1]), 'k') : blank5();
+    if(!fullK(K)) return null;
+    const L = o.map((v, i) => v !== '' ? v : pv[i]); if(!fullK(L)) return null;
+    const u = i => r6(MULT * r6(num(K[i]) - num(L[i])));
+    act += u(0) + u(1) + u(2); rea += u(3) + u(4); any = true;
+  }
+  return any ? {act: r6(act), rea: r6(rea)} : null;
+}
 function render(force){
   const d = cur, K = getArr(dayKey(d), 'k'), Lo = getArr(dayKey(d), 'l'), A = autoL(d) || blank5(), V = getArr(baseKey(d), 'v');
   const put = (el, v) => { if(el !== document.activeElement && (force || el.value !== v)) el.value = v; };
@@ -325,9 +345,9 @@ function render(force){
   }
   const w = $('warn'); w.hidden = !neg.length; if(neg.length) w.textContent = neg.join('·') + '번: 금일지침이 전일지침보다 작습니다. 입력값을 확인하세요.';
   const set = (id, v, unit) => { const e = $(id); e.className = 'o big' + (v == null ? ' na' : ''); e.innerHTML = v == null ? '—' : fmt(v) + '<small>' + unit + '</small>'; };
-  set('sum-act', c.act, 'kWh'); set('sum-rea', c.rea, 'kVARh'); set('m-act', c.mAct, 'kWh'); set('m-rea', c.mRea, 'kVARh');
-  const needBase = K.some(v => v !== '') && V.some(v => v === '');
-  $('baseSum').textContent = needBase ? '월누적 계산 기준 (전월 말 검침) — 입력하면 월누적이 계산됩니다' : '월누적 계산 기준 (전월 말 검침)';
+  set('sum-act', c.act, 'kWh'); set('sum-rea', c.rea, 'kVARh'); const mc = monthCum(d); set('m-act', mc ? mc.act : c.mAct, 'kWh'); set('m-rea', mc ? mc.rea : c.mRea, 'kVARh');
+  const needBase = !mc && K.some(v => v !== '') && V.some(v => v === '');
+  $('baseSum').textContent = needBase ? '월누적을 계산할 기록이 모자랍니다 — 전월 말 검침을 넣으면 계산됩니다' : '월누적 보조 기준 (전월 말 검침, 보통 필요 없음)';
   const dt = parseD(d); $('dlabel').textContent = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[dt.getDay()]})`;
   if($('date') !== document.activeElement) $('date').value = d;
 }
